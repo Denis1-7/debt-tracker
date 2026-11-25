@@ -1,0 +1,2756 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Долги · Debt Tracker</title>
+<meta name="description" content="Личный учёт займов и долгов: простые проценты, платежи и итоги по каждому человеку. Работает офлайн, данные хранятся в браузере.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<!-- Installed-app behaviour: full screen, own status bar, no browser chrome. -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Долги">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2236%22%20height%3D%2236%22%20viewBox%3D%220%200%2036%2036%22%20role%3D%22img%22%20aria-label%3D%22Debt%20tracker%22%3E%0A%20%20%3C!--%20Wallet%20silhouette%3A%20the%20money%20you%20lent%20or%20borrowed.%20--%3E%0A%20%20%3Crect%20x%3D%225%22%20y%3D%229%22%20width%3D%2223%22%20height%3D%2217%22%20rx%3D%224.5%22%20fill%3D%22none%22%20stroke%3D%22%236C7AE0%22%20stroke-width%3D%222.2%22%20%2F%3E%0A%20%20%3C!--%20Card%20pocket%2C%20read%20as%20a%20wallet%20rather%20than%20a%20plain%20box.%20--%3E%0A%20%20%3Cpath%20d%3D%22M5%2016h11%22%20fill%3D%22none%22%20stroke%3D%22%236C7AE0%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%20%2F%3E%0A%20%20%3C!--%20Coin%20badge%3A%20the%20interest%20that%20accrues%20on%20top.%20--%3E%0A%20%20%3Ccircle%20cx%3D%2227%22%20cy%3D%2225%22%20r%3D%226.5%22%20fill%3D%22%23E7A63F%22%20%2F%3E%0A%20%20%3Ccircle%20cx%3D%2227%22%20cy%3D%2225%22%20r%3D%224%22%20fill%3D%22none%22%20stroke%3D%22%23C4862A%22%20stroke-width%3D%221.4%22%20%2F%3E%0A%3C%2Fsvg%3E" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<style>
+:root {
+  color-scheme: light dark;
+  --dsw-alias-bg-base: #ffffff;
+  --dsw-alias-bg-layer-1: #ffffff;
+  --dsw-alias-bg-layer-2: #f7f8fa;
+  --dsw-alias-bg-layer-3: #eceff4;
+  --dsw-alias-bg-overlay: #ffffff;
+  --dsw-alias-bg-mask-1: rgba(15, 18, 25, 0.32);
+  --dsw-alias-card-fill: #fafafa;
+  --dsw-alias-card-fill-hover: #f2f4f8;
+  --dsw-alias-label-primary: #16181d;
+  --dsw-alias-label-secondary: #4a5060;
+  --dsw-alias-label-tertiary: #767d8d;
+  --dsw-alias-label-on-color: #ffffff;
+  --dsw-alias-border-l1: #eceef2;
+  --dsw-alias-border-l2: #dfe3ea;
+  --dsw-alias-border-l3: #cfd5df;
+  --dsw-alias-border-selected: #3b82f6;
+  --dsw-alias-state-success-primary: #16a34a;
+  --dsw-alias-state-error-primary: #dc2626;
+  --dsw-alias-state-warn-primary: #d97706;
+  --dsw-alias-interactive-bg-hover: #f1f3f7;
+  --dsw-alias-interactive-bg-hover-danger: #fee2e2;
+  /* The primary button paints its label with the page background, so the fill
+     must be the inverse of it: dark ink on the light theme, light ink on the
+     dark one. This mirrors the Harness brand-primary token. */
+  --dsw-alias-button-primary-fill: #16181d;
+  --dsw-alias-button-primary-hover: #33373f;
+  --dsw-alias-button-elevated-fill: #ffffff;
+  --dsw-alias-scrollbar-bg-l1: #d8dce4;
+  --dsw-mask-blur: blur(2px);
+  --dsw-shadow-lv3: 0 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 4px 0 rgba(0, 0, 0, 0.02), 0 12px 32px 0 rgba(0, 0, 0, 0.08);
+  --dsh-frame-top-clearance: 0px;
+  --dsh-frame-overlay-top: 24px;
+  --ds-transition-duration-slow: 120ms;
+  --ds-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dsw-alias-bg-base: #16171b;
+    --dsw-alias-bg-layer-1: #1b1d22;
+    --dsw-alias-bg-layer-2: #1f2127;
+    --dsw-alias-bg-layer-3: #2a2d35;
+    --dsw-alias-bg-overlay: #20232a;
+    --dsw-alias-bg-mask-1: rgba(0, 0, 0, 0.5);
+    --dsw-alias-card-fill: #1e2026;
+    --dsw-alias-card-fill-hover: #262932;
+    --dsw-alias-label-primary: #f2f4f8;
+    --dsw-alias-label-secondary: #b6bcc9;
+    --dsw-alias-label-tertiary: #878e9d;
+    --dsw-alias-label-on-color: #ffffff;
+    --dsw-alias-border-l1: #262932;
+    --dsw-alias-border-l2: #343844;
+    --dsw-alias-border-l3: #434856;
+    --dsw-alias-border-selected: #60a5fa;
+    --dsw-alias-state-success-primary: #34d399;
+    --dsw-alias-state-error-primary: #f87171;
+    --dsw-alias-state-warn-primary: #fbbf24;
+    --dsw-alias-interactive-bg-hover: #2b2f39;
+    --dsw-alias-interactive-bg-hover-danger: #3a2427;
+    --dsw-alias-button-primary-fill: #f2f4f8;
+    --dsw-alias-button-primary-hover: #d9dde6;
+    --dsw-alias-button-elevated-fill: #24262d;
+    --dsw-alias-scrollbar-bg-l1: #3a3f4a;
+    --dsw-shadow-lv3: 0 0 1px 0 rgba(0, 0, 0, 0.6), 0 12px 32px 0 rgba(0, 0, 0, 0.4);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  -webkit-font-smoothing: antialiased;
+  text-size-adjust: 100%;
+}
+#app { height: 100dvh; }
+
+.dt-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+}
+.dt-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 24px 12px;
+  flex: 0 0 auto;
+}
+/* macOS hiddenInset titlebar: the layout leaves the window's top strip to the
+   page (as the shipped Plugins page does), so the header reserves it itself and
+   an interactive control never sits under the native window controls. */
+html[data-platform='darwin'] .dt-header {
+  padding-top: calc(18px + var(--dsh-frame-top-clearance, 0px));
+}
+.dt-header-main { min-width: 0; flex: 1; }
+.dt-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.dt-sub {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.dt-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.dt-btn {
+  appearance: none;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-button-elevated-fill);
+  color: var(--dsw-alias-label-primary);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ds-transition-duration-slow, 120ms) var(--ds-ease-in-out, ease);
+}
+.dt-btn:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.dt-btn:focus-visible { outline: 2px solid var(--dsw-alias-border-selected); outline-offset: 1px; }
+.dt-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.dt-btn-primary {
+  background: var(--dsw-alias-button-primary-fill);
+  border-color: transparent;
+  /* The fill is the host brand ink — near-black in the light theme, near-white
+     in the dark one — while the label-on-color token is pure white in BOTH
+     themes, so this button used to be white text on a white fill in the dark
+     theme. The page background is the correct inverse of the fill either way. */
+  color: var(--dsw-alias-bg-base);
+  font-weight: 500;
+}
+.dt-btn-primary:hover { background: var(--dsw-alias-button-primary-hover, var(--dsw-alias-interactive-bg-hover)); }
+.dt-btn-primary:focus-visible { outline-color: var(--dsw-alias-label-primary); }
+.dt-btn-ghost { background: transparent; border-color: transparent; color: var(--dsw-alias-label-secondary); padding: 5px 8px; }
+.dt-btn-ghost:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.dt-btn-danger { color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-btn-danger:hover { background: var(--dsw-alias-interactive-bg-hover-danger); }
+.dt-btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 7px; }
+.dt-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 24px 32px; }
+.dt-scroll::-webkit-scrollbar { width: 10px; }
+.dt-scroll::-webkit-scrollbar-thumb { background: var(--dsw-alias-scrollbar-bg-l1); border-radius: 6px; }
+.dt-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+}
+.dt-banner-warn { border-color: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 35%, transparent); color: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-banner-grow { flex: 1; }
+.dt-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.dt-card {
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-card-fill);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+.dt-card-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dsw-alias-label-tertiary);
+  font-weight: 600;
+}
+.dt-card-value {
+  margin-top: 7px;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.dt-card-hint { margin-top: 4px; font-size: 11.5px; color: var(--dsw-alias-label-tertiary); }
+/* Semantic text colours are blended toward the label colour, so they keep a
+   readable contrast on the light card surface as well as the dark one. */
+.dt-green { color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-red { color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-orange { color: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-mini { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 11.5px; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }
+.dt-also { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 3px; font-size: 11px; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }
+.dt-danger-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--dsw-alias-border-l1); }
+.dt-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+.dt-section-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--dsw-alias-label-secondary); }
+.dt-count {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--dsw-alias-bg-layer-3);
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+}
+.dt-list { display: flex; flex-direction: column; gap: 8px; }
+.dt-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-left: 3px solid transparent;
+  border-radius: 11px;
+  background: var(--dsw-alias-card-fill);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--ds-transition-duration-slow, 120ms) var(--ds-ease-in-out, ease);
+}
+.dt-row:hover { background: var(--dsw-alias-card-fill-hover); }
+.dt-row:focus-visible { outline: 2px solid var(--dsw-alias-border-selected); outline-offset: 1px; }
+.dt-row-owed { border-left-color: var(--dsw-alias-state-success-primary); }
+.dt-row-owe { border-left-color: var(--dsw-alias-state-error-primary); }
+.dt-avatar {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--dsw-alias-bg-layer-3);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.dt-row-main { flex: 1 1 auto; min-width: 0; display: block; }
+.dt-row-name { display: flex; font-size: 13.5px; font-weight: 550; align-items: center; gap: 7px; flex-wrap: wrap; }
+.dt-row-meta { display: flex; margin-top: 3px; font-size: 11.5px; color: var(--dsw-alias-label-tertiary); gap: 10px; flex-wrap: wrap; }
+.dt-row-side { flex: 0 0 auto; text-align: right; display: block; }
+.dt-row-amount { display: block; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dt-row-status { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; }
+.dt-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--dsw-alias-bg-layer-3);
+  color: var(--dsw-alias-label-secondary);
+}
+.dt-tag-green { background: color-mix(in srgb, var(--dsw-alias-state-success-primary) 14%, transparent); color: color-mix(in srgb, var(--dsw-alias-state-success-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-tag-red { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 14%, transparent); color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-tag-orange { background: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 16%, transparent); color: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  padding: 4px 8px 4px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.dt-back:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.dt-back:focus-visible { outline: 2px solid var(--dsw-alias-border-selected); outline-offset: 1px; }
+.dt-detail-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.dt-detail-name { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.dt-detail-meta { margin: 3px 0 0; font-size: 12px; color: var(--dsw-alias-label-tertiary); }
+.dt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.dt-stat {
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-2);
+  padding: 10px 12px;
+}
+.dt-stat-label { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+.dt-stat-value { margin-top: 4px; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dt-position {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  margin-bottom: 20px;
+  border-radius: 11px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+}
+.dt-position-label { font-size: 12px; color: var(--dsw-alias-label-tertiary); }
+.dt-position-value { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dt-loan {
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 11px;
+  background: var(--dsw-alias-card-fill);
+  padding: 13px 15px;
+}
+.dt-loan-top { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.dt-loan-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; flex: 1 1 auto; }
+.dt-loan-note { margin: 5px 0 0; font-size: 11.5px; color: var(--dsw-alias-label-tertiary); }
+.dt-loan-amount { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.dt-loan-amount small { display: block; font-size: 10.5px; font-weight: 400; color: var(--dsw-alias-label-tertiary); }
+.dt-loan-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px 14px;
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+}
+.dt-loan-stat-label { font-size: 10.5px; color: var(--dsw-alias-label-tertiary); }
+.dt-loan-stat-value { margin-top: 2px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.dt-progress { margin-top: 11px; height: 4px; border-radius: 999px; background: var(--dsw-alias-bg-layer-3); overflow: hidden; }
+.dt-progress-fill { height: 100%; border-radius: 999px; background: var(--dsw-alias-state-success-primary); }
+.dt-payments { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--dsw-alias-border-l1); }
+.dt-payment { display: flex; justify-content: space-between; gap: 12px; font-size: 11.5px; color: var(--dsw-alias-label-secondary); padding: 2px 0; font-variant-numeric: tabular-nums; }
+.dt-loan-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.dt-empty {
+  border: 1px dashed var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  padding: 34px 22px;
+  text-align: center;
+  color: var(--dsw-alias-label-tertiary);
+}
+.dt-empty-title { font-size: 14px; font-weight: 600; color: var(--dsw-alias-label-secondary); margin-bottom: 5px; }
+.dt-empty-body { font-size: 12.5px; line-height: 1.5; max-width: 420px; margin: 0 auto 14px; }
+.dt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--dsh-frame-overlay-top, 48px) 20px 24px;
+  background: var(--dsw-alias-bg-mask-1);
+  backdrop-filter: var(--dsw-mask-blur);
+  overflow-y: auto;
+}
+.dt-modal {
+  width: min(640px, 100%);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 14px;
+  background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-layer-1));
+  box-shadow: var(--dsw-shadow-lv3, 0 12px 32px rgba(0, 0, 0, 0.14));
+  color: var(--dsw-alias-label-primary);
+}
+.dt-modal-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px 12px; }
+.dt-modal-title { margin: 0; font-size: 15px; font-weight: 600; flex: 1; }
+.dt-modal-body { padding: 0 18px 4px; }
+.dt-modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px 16px; }
+.dt-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 13px; }
+.dt-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dt-field-wide { grid-column: 1 / -1; }
+.dt-label { font-size: 11.5px; font-weight: 550; color: var(--dsw-alias-label-secondary); }
+.dt-input, .dt-select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 9px;
+}
+.dt-input:focus, .dt-select:focus { outline: 2px solid var(--dsw-alias-border-selected); outline-offset: -1px; border-color: transparent; }
+.dt-input[aria-invalid="true"] { border-color: var(--dsw-alias-state-error-primary); }
+.dt-error { font-size: 11px; color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 60%, var(--dsw-alias-label-primary)); }
+.dt-segment { display: flex; gap: 6px; flex-wrap: wrap; }
+.dt-segment-option {
+  flex: 1 1 auto;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dt-segment-option[aria-pressed="true"] {
+  border-color: var(--dsw-alias-border-selected);
+  background: var(--dsw-alias-bg-layer-3);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 550;
+}
+.dt-preview {
+  margin-top: 15px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 11px;
+  background: var(--dsw-alias-bg-layer-2);
+  padding: 12px 14px;
+}
+.dt-preview-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+.dt-preview-title { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dsw-alias-label-tertiary); }
+.dt-preview-asof { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+.dt-preview-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.dt-preview-total-label { font-size: 12px; color: var(--dsw-alias-label-secondary); }
+.dt-preview-total-value { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dt-check { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dsw-alias-label-secondary); }
+.dt-check input { accent-color: var(--dsw-alias-button-primary-fill); }
+.dt-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+@media (max-width: 620px) {
+  .dt-header { flex-direction: column; }
+  .dt-actions { justify-content: flex-start; }
+  .dt-fields { grid-template-columns: minmax(0, 1fr); }
+  .dt-scroll, .dt-header { padding-left: 16px; padding-right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dt-btn, .dt-row { transition: none; }
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior-y: none; touch-action: manipulation; }
+.dt-header {
+  padding-top: calc(18px + env(safe-area-inset-top, 0px));
+  padding-left: calc(24px + env(safe-area-inset-left, 0px));
+  padding-right: calc(24px + env(safe-area-inset-right, 0px));
+}
+.dt-scroll {
+  padding-left: calc(24px + env(safe-area-inset-left, 0px));
+  padding-right: calc(24px + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 620px) {
+  .dt-header, .dt-scroll {
+    padding-left: calc(16px + env(safe-area-inset-left, 0px));
+    padding-right: calc(16px + env(safe-area-inset-right, 0px));
+  }
+  .dt-scroll { padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+  /* Comfortable tap targets on a phone, where 4px padding is too small. */
+  .dt-btn-sm { padding: 7px 11px; font-size: 12.5px; }
+  .dt-row { padding: 14px; }
+  .dt-overlay { padding: calc(12px + env(safe-area-inset-top, 0px)) 8px 12px; }
+}
+@media (display-mode: standalone) {
+  body { user-select: none; }
+  input, textarea { user-select: text; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript>
+  <p style="padding:24px;font:16px/1.5 system-ui,sans-serif">
+    Для работы приложения нужен JavaScript. / This app needs JavaScript enabled.
+  </p>
+</noscript>
+<script>
+(() => {
+  'use strict'
+  const calc = (function () {
+    /**
+     * Debt Tracker — pure interest and aggregation math.
+     *
+     * No DOM, no storage, no locale, no clock: every exported function is a pure
+     * transform of its arguments, so the whole module is unit-testable and the
+     * browser bundle reuses this exact source (see `tools/build.mjs`).
+     *
+     * Conventions that make results deterministic:
+     * - Calendar dates are handled as UTC midnights, so a day is always 24h and
+     *   daylight-saving changes cannot shift a day count.
+     * - Simple interest accrues on the ORIGINAL principal:
+     *     interest = principal x (rate / 100) x daysElapsed / periodBase
+     *   with periodBase 365 for "annual", 30 for "monthly" and 1 for "daily", so a
+     *   0.1% daily rate costs 3% over 30 days. "fixed" is a one-off sum that is
+     *   fully accrued from the start date. "none" is zero.
+     * - Money is rounded to 2 decimals only at reported figures.
+     */
+
+    /** Milliseconds in one day; day counts are exact multiples of it. */
+    const MS_PER_DAY = 86400000
+
+    /** Days in the interest period a rate is quoted for. */
+    const PERIOD_BASE = { annual: 365, monthly: 30, daily: 1 }
+
+    /** Accepted loan directions. */
+    const DIRECTIONS = ['lent', 'borrowed']
+
+    /** Accepted interest rate types. `daily` is a simple per-day percentage. */
+    const RATE_TYPES = ['annual', 'monthly', 'daily', 'fixed', 'none']
+
+    /** Accepted stored loan statuses. */
+    const STATUSES = ['active', 'partially_paid', 'closed']
+
+    /** Accepted payment allocation strategies. */
+    const ALLOCATIONS = ['interest_first', 'principal_first']
+
+    /** Tolerance used when comparing money, so float dust cannot flip a position. */
+    const MONEY_EPSILON = 0.005
+
+    /**
+     * Parse a calendar date into UTC-midnight milliseconds.
+     * Accepts `YYYY-MM-DD`, a `Date`, or epoch milliseconds. Time-of-day is dropped.
+     * @param value - the candidate date.
+     * @returns milliseconds since epoch at UTC midnight, or null when unusable.
+     */
+    function parseDateOnly(value) {
+      if (value instanceof Date) {
+        if (Number.isNaN(value.getTime())) return null
+        return Date.UTC(value.getFullYear(), value.getMonth(), value.getDate())
+      }
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) return null
+        return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+      }
+      if (typeof value !== 'string') return null
+      const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim())
+      if (match === null) return null
+      const year = Number(match[1])
+      const month = Number(match[2]) - 1
+      const day = Number(match[3])
+      const ms = Date.UTC(year, month, day)
+      const check = new Date(ms)
+      // Reject impossible dates such as 2026-02-31, which Date.UTC would roll over.
+      if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month || check.getUTCDate() !== day) return null
+      return ms
+    }
+
+    /**
+     * Normalise any accepted date shape to `YYYY-MM-DD`.
+     * @param value - the candidate date.
+     * @returns the ISO date, or null when unusable.
+     */
+    function toISODate(value) {
+      const ms = parseDateOnly(value)
+      return ms === null ? null : new Date(ms).toISOString().slice(0, 10)
+    }
+
+    /**
+     * Whole days from one calendar date to another; negative when `to` is earlier.
+     * @param from - start date.
+     * @param to - end date.
+     * @returns the signed day count, or 0 when either date is unusable.
+     */
+    function diffDays(from, to) {
+      const a = parseDateOnly(from)
+      const b = parseDateOnly(to)
+      if (a === null || b === null) return 0
+      return Math.round((b - a) / MS_PER_DAY)
+    }
+
+    /**
+     * Today as `YYYY-MM-DD` in the host's local zone.
+     * @param now - injectable clock, for tests.
+     * @returns the local calendar date.
+     */
+    function todayISO(now = new Date()) {
+      const date = now instanceof Date ? now : new Date(now)
+      if (Number.isNaN(date.getTime())) return toISODate(new Date())
+      const year = String(date.getFullYear()).padStart(4, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    /**
+     * Round a money amount to 2 decimals, robust to binary float drift.
+     * @param value - the raw amount.
+     * @returns the rounded amount, or 0 when not finite.
+     */
+    function round2(value) {
+      const number = Number(value)
+      if (!Number.isFinite(number)) return 0
+      const sign = number < 0 ? -1 : 1
+      return (sign * Math.round((Math.abs(number) + Number.EPSILON) * 100)) / 100
+    }
+
+    /**
+     * Coerce a value to a finite number.
+     * @param value - the candidate.
+     * @param fallback - used when the candidate is not finite.
+     * @returns the number.
+     */
+    function num(value, fallback = 0) {
+      const number = Number(value)
+      return Number.isFinite(number) ? number : fallback
+    }
+
+    /**
+     * Shift an ISO date by a whole number of days.
+     * @param isoDate - the base date.
+     * @param days - days to add; may be negative.
+     * @returns the shifted ISO date, or null when the base is unusable.
+     */
+    function addDays(isoDate, days) {
+      const ms = parseDateOnly(isoDate)
+      if (ms === null) return null
+      return new Date(ms + Math.round(num(days)) * MS_PER_DAY).toISOString().slice(0, 10)
+    }
+
+    /**
+     * Normalise a stored rate type.
+     * @param value - the candidate.
+     * @returns one of RATE_TYPES.
+     */
+    function normRateType(value) {
+      return RATE_TYPES.includes(value) ? value : 'none'
+    }
+
+    /**
+     * Normalise a stored direction.
+     * @param value - the candidate.
+     * @returns one of DIRECTIONS.
+     */
+    function normDirection(value) {
+      return DIRECTIONS.includes(value) ? value : 'lent'
+    }
+
+    /**
+     * Normalise a stored loan status.
+     * @param value - the candidate.
+     * @returns one of STATUSES.
+     */
+    function normStatus(value) {
+      return STATUSES.includes(value) ? value : 'active'
+    }
+
+    /**
+     * Normalise a payment allocation strategy.
+     * @param value - the candidate.
+     * @returns one of ALLOCATIONS.
+     */
+    function normAllocation(value) {
+      return ALLOCATIONS.includes(value) ? value : 'interest_first'
+    }
+
+    /**
+     * Normalise the optional penalty configuration.
+     * @param penalty - `{ enabled, annualRate }`.
+     * @returns `{ enabled: boolean, annualRate: number }`.
+     */
+    function normalizePenalty(penalty) {
+      if (penalty === null || typeof penalty !== 'object') return { enabled: false, annualRate: 0 }
+      return { enabled: penalty.enabled === true, annualRate: Math.max(0, num(penalty.annualRate)) }
+    }
+
+    /**
+     * Days elapsed from a loan's start date to a reference date, never negative.
+     * @param loan - the loan.
+     * @param asOf - reference date; defaults to today.
+     * @returns whole days.
+     */
+    function elapsedDays(loan, asOf = todayISO()) {
+      return Math.max(0, diffDays(loan?.startDate, asOf))
+    }
+
+    /**
+     * Interest accrued on a loan up to a reference date.
+     *
+     * This is the single interest primitive: `deriveLoan` calls it once for the
+     * reference date and once per payment date, so allocation and the reported
+     * accrued interest can never disagree.
+     *
+     * @param loan - the loan.
+     * @param asOf - reference date; defaults to today.
+     * @returns the accrued interest, rounded to 2 decimals.
+     */
+    function interestAt(loan, asOf = todayISO()) {
+      const principal = Math.max(0, num(loan?.principal))
+      const rate = num(loan?.rateValue)
+      const rateType = normRateType(loan?.rateType)
+      if (principal <= 0 || rate <= 0) return 0
+      if (rateType === 'none') return 0
+
+      const start = parseDateOnly(loan?.startDate)
+      const reference = parseDateOnly(asOf)
+      if (start === null || reference === null || reference < start) return 0
+
+      if (rateType === 'fixed') return round2(rate)
+
+      const periodBase = PERIOD_BASE[rateType] ?? 365
+      const days = Math.max(0, diffDays(loan.startDate, asOf))
+      return round2((principal * (rate / 100) * days) / periodBase)
+    }
+
+    /**
+     * Full breakdown of one loan as of a reference date.
+     *
+     * Payments are applied in date order against the interest accrued at that
+     * payment's own date, so an early payment cannot pay interest that had not
+     * accrued yet. `totalDue` follows the documented formula
+     * `principal + accruedInterest + penaltyInterest - totalPaid`.
+     *
+     * @param loan - the loan to derive.
+     * @param options - `{ asOf, penalty }`.
+     * @returns the per-loan breakdown.
+     */
+    function deriveLoan(loan, options = {}) {
+      const asOf = toISODate(options.asOf) ?? todayISO()
+      const penaltyCfg = normalizePenalty(options.penalty)
+
+      const principal = Math.max(0, round2(num(loan?.principal)))
+      const currency = String(loan?.currency ?? '').trim().toUpperCase() || 'RUB'
+      const startDate = toISODate(loan?.startDate)
+      const dueDate = toISODate(loan?.dueDate)
+      const storedStatus = normStatus(loan?.status)
+
+      const accruedInterest = interestAt(loan, asOf)
+      const daysElapsed = Math.max(0, diffDays(startDate, asOf))
+
+      // One payment list in chronological order; ties keep their original order so
+      // the allocation sequence is stable.
+      const payments = (Array.isArray(loan?.payments) ? loan.payments : [])
+        .map((payment, index) => ({
+          date: toISODate(payment?.date) ?? startDate ?? asOf,
+          amount: Math.max(0, round2(num(payment?.amount))),
+          allocation: normAllocation(payment?.allocation),
+          index,
+        }))
+        .filter((payment) => payment.amount > 0)
+        .sort((a, b) => (a.date === b.date ? a.index - b.index : a.date < b.date ? -1 : 1))
+
+      let paidPrincipal = 0
+      let paidInterest = 0
+      let totalPaid = 0
+      for (const payment of payments) {
+        totalPaid = round2(totalPaid + payment.amount)
+        const interestOutstanding = Math.max(0, round2(interestAt(loan, payment.date) - paidInterest))
+        const principalOutstanding = Math.max(0, round2(principal - paidPrincipal))
+        let remaining = payment.amount
+        const applyInterest = () => {
+          const applied = Math.min(remaining, interestOutstanding)
+          paidInterest = round2(paidInterest + applied)
+          remaining = round2(remaining - applied)
+        }
+        const applyPrincipal = () => {
+          const applied = Math.min(remaining, principalOutstanding)
+          paidPrincipal = round2(paidPrincipal + applied)
+          remaining = round2(remaining - applied)
+        }
+        if (payment.allocation === 'principal_first') {
+          applyPrincipal()
+          applyInterest()
+        } else {
+          applyInterest()
+          applyPrincipal()
+        }
+        // Anything left over both buckets is a credit towards future interest.
+      }
+
+      const overpaid = Math.max(0, round2(totalPaid - paidPrincipal - paidInterest))
+      const remainingPrincipal = Math.max(0, round2(principal - paidPrincipal))
+      const remainingInterest = Math.max(0, round2(accruedInterest - paidInterest))
+
+      const overdueDays = dueDate === null ? 0 : Math.max(0, diffDays(dueDate, asOf))
+      const balanceBeforePenalty = round2(remainingPrincipal + remainingInterest)
+      const isSettledByStored = storedStatus === 'closed'
+      const isOverdue = overdueDays > 0 && !isSettledByStored && balanceBeforePenalty > MONEY_EPSILON
+
+      let penaltyInterest = 0
+      if (isOverdue && penaltyCfg.enabled && penaltyCfg.annualRate > 0) {
+        penaltyInterest = round2((balanceBeforePenalty * (penaltyCfg.annualRate / 100) * overdueDays) / 365)
+      }
+
+      const totalDue = Math.max(0, round2(principal + accruedInterest + penaltyInterest - totalPaid))
+      const effectiveStatus = isSettledByStored || totalDue <= MONEY_EPSILON
+        ? 'closed'
+        : totalPaid > MONEY_EPSILON
+          ? 'partially_paid'
+          : 'active'
+
+      const charged = round2(principal + accruedInterest)
+      // Progress reflects money actually paid. A loan marked closed by hand with
+      // nothing paid is closed but 0% paid, so the bar cannot claim otherwise.
+      const progress = charged <= 0
+        ? 0
+        : Math.min(1, Math.max(0, round2((totalPaid / charged) * 100) / 100))
+
+      return {
+        // identity and inputs
+        id: loan?.id ?? null,
+        personId: loan?.personId ?? null,
+        direction: normDirection(loan?.direction),
+        currency,
+        principal,
+        rateType: normRateType(loan?.rateType),
+        rateValue: num(loan?.rateValue),
+        startDate,
+        dueDate,
+        note: typeof loan?.note === 'string' ? loan.note : '',
+        // stored and derived status
+        storedStatus,
+        status: effectiveStatus,
+        isSettledByStored,
+        // accrual
+        daysElapsed,
+        overdueDays,
+        isOverdue,
+        accruedInterest,
+        penaltyInterest,
+        interestTotal: round2(accruedInterest + penaltyInterest),
+        // payments
+        paymentCount: payments.length,
+        payments,
+        totalPaid,
+        paidPrincipal: round2(paidPrincipal),
+        paidInterest: round2(paidInterest),
+        overpaid,
+        // balance
+        remainingPrincipal,
+        remainingInterest,
+        totalDue,
+        progress,
+      }
+    }
+
+    /**
+     * Normalise the optional `asOf`/`penalty` options shared by the aggregators.
+     * @param options - `{ asOf, penalty }`.
+     * @returns resolved options with a definite reference date.
+     */
+    function normalizeOptions(options = {}) {
+      return {
+        asOf: toISODate(options?.asOf) ?? todayISO(),
+        penalty: normalizePenalty(options?.penalty),
+      }
+    }
+
+    /**
+     * An empty per-currency accumulator.
+     *
+     * `net`, `position`, `overdueCount` and `overdueAmount` are filled once the
+     * bucket is complete, so a currency's position is never mixed with another's.
+     * @returns the zero bucket.
+     */
+    function emptyBucket() {
+      return {
+        lentPrincipal: 0,
+        borrowedPrincipal: 0,
+        lentDue: 0,
+        borrowedDue: 0,
+        interest: 0,
+        penalty: 0,
+        net: 0,
+        position: 'settled',
+        overdueCount: 0,
+        overdueAmount: 0,
+      }
+    }
+
+    /**
+     * Classify a net amount into a position.
+     * @param net - lent due minus borrowed due.
+     * @returns `owedToMe`, `iOwe` or `settled`.
+     */
+    function positionOf(net) {
+      if (net > MONEY_EPSILON) return 'owedToMe'
+      if (net < -MONEY_EPSILON) return 'iOwe'
+      return 'settled'
+    }
+
+    /**
+     * Add one derived loan into a bucket. Closed loans are excluded upstream.
+     * @param bucket - the accumulator to mutate.
+     * @param loan - a derived loan.
+     * @returns the same bucket, for chaining.
+     */
+    function addToBucket(bucket, loan) {
+      const target = bucket
+      if (loan.direction === 'borrowed') {
+        target.borrowedPrincipal = round2(target.borrowedPrincipal + loan.remainingPrincipal)
+        target.borrowedDue = round2(target.borrowedDue + loan.totalDue)
+      } else {
+        target.lentPrincipal = round2(target.lentPrincipal + loan.remainingPrincipal)
+        target.lentDue = round2(target.lentDue + loan.totalDue)
+      }
+      target.interest = round2(target.interest + loan.accruedInterest)
+      target.penalty = round2(target.penalty + loan.penaltyInterest)
+      return target
+    }
+
+    /**
+     * Reduce a `{ currency: bucket }` map to plain sums across currencies.
+     * @param byCurrency - the per-currency map.
+     * @returns summed figures plus the number of distinct currencies.
+     */
+    function sumBuckets(byCurrency) {
+      const total = emptyBucket()
+      for (const bucket of Object.values(byCurrency ?? {})) {
+        total.lentPrincipal = round2(total.lentPrincipal + bucket.lentPrincipal)
+        total.borrowedPrincipal = round2(total.borrowedPrincipal + bucket.borrowedPrincipal)
+        total.lentDue = round2(total.lentDue + bucket.lentDue)
+        total.borrowedDue = round2(total.borrowedDue + bucket.borrowedDue)
+        total.interest = round2(total.interest + bucket.interest)
+        total.penalty = round2(total.penalty + bucket.penalty)
+      }
+      return { ...total, currencies: Object.keys(byCurrency ?? {}).sort() }
+    }
+
+    /**
+     * Plan a renewal: settle the old loan in full on the reference date and carry
+     * its whole outstanding balance into a new loan.
+     *
+     * The rule lives here, not in either UI, because it decides money: nothing is
+     * written off, the old loan keeps an auditable settlement payment, and the new
+     * principal is exactly what was owed. Both the plugin and the single-file app
+     * call this, so they cannot drift apart.
+     *
+     * @param loan - the loan being renewed.
+     * @param options - `{ asOf, penalty }`.
+     * @returns `{ derived, principal, settlementPayment }` where
+     *   `settlementPayment` is null when nothing is owed.
+     */
+    function planRenewal(loan, options = {}) {
+      const resolved = normalizeOptions(options)
+      const derived = deriveLoan(loan, resolved)
+      const owed = derived.totalDue > MONEY_EPSILON
+      return {
+        derived,
+        principal: owed ? derived.totalDue : 0,
+        settlementPayment: owed
+          ? { date: resolved.asOf, amount: derived.totalDue, allocation: 'interest_first' }
+          : null,
+      }
+    }
+
+    /**
+     * Aggregate one person's loans into their position.
+     *
+     * Closed loans stay listed in `loans` for history but are excluded from every
+     * aggregate and from the net position, so a settled loan cannot distort a
+     * balance.
+     *
+     * @param person - the person with a `loans` array.
+     * @param options - `{ asOf, penalty }`.
+     * @returns the aggregated person view.
+     */
+    function derivePerson(person, options = {}) {
+      const resolved = normalizeOptions(options)
+      const loans = (Array.isArray(person?.loans) ? person.loans : []).map((loan) => deriveLoan(
+        { ...loan, personId: loan?.personId ?? person?.id ?? null },
+        resolved,
+      ))
+
+      const active = loans.filter((loan) => loan.status !== 'closed')
+      const byCurrency = {}
+      for (const loan of active) {
+        const bucket = byCurrency[loan.currency] ?? (byCurrency[loan.currency] = emptyBucket())
+        addToBucket(bucket, loan)
+      }
+      // Every currency carries its own position, so a RUB balance is never netted
+      // against a USD one in a figure the UI colours or labels.
+      for (const [currency, bucket] of Object.entries(byCurrency)) {
+        const overdueHere = active.filter((loan) => loan.isOverdue && loan.currency === currency)
+        bucket.net = round2(bucket.lentDue - bucket.borrowedDue)
+        bucket.position = positionOf(bucket.net)
+        bucket.overdueCount = overdueHere.length
+        bucket.overdueAmount = round2(overdueHere.reduce((sum, loan) => sum + loan.totalDue, 0))
+      }
+      const totals = sumBuckets(byCurrency)
+
+      const net = round2(totals.lentDue - totals.borrowedDue)
+      const position = positionOf(net)
+      const overdueLoans = active.filter((loan) => loan.isOverdue)
+
+      const nextDueDate = active
+        .map((loan) => loan.dueDate)
+        .filter((date) => typeof date === 'string' && date.length === 10)
+        .sort()[0] ?? null
+
+      return {
+        id: person?.id ?? null,
+        name: String(person?.name ?? '').trim(),
+        contact: typeof person?.contact === 'string' ? person.contact.trim() : '',
+        note: typeof person?.note === 'string' ? person.note : '',
+        loans,
+        loanCount: loans.length,
+        activeLoanCount: active.length,
+        closedLoanCount: loans.length - active.length,
+        totalPrincipal: round2(totals.lentPrincipal + totals.borrowedPrincipal),
+        totalLentPrincipal: totals.lentPrincipal,
+        totalBorrowedPrincipal: totals.borrowedPrincipal,
+        totalInterest: totals.interest,
+        totalPenalty: totals.penalty,
+        totalDue: round2(totals.lentDue + totals.borrowedDue),
+        totalLentDue: totals.lentDue,
+        totalBorrowedDue: totals.borrowedDue,
+        net,
+        position,
+        overdueCount: overdueLoans.length,
+        overdueAmount: round2(overdueLoans.reduce((sum, loan) => sum + loan.totalDue, 0)),
+        nextDueDate,
+        currencies: totals.currencies,
+        byCurrency,
+      }
+    }
+
+    /**
+     * Aggregate the whole tracker into dashboard figures.
+     * @param state - `{ persons: [...] }`.
+     * @param options - `{ asOf, penalty }`.
+     * @returns the global dashboard figures and the derived people.
+     */
+    function deriveDashboard(state, options = {}) {
+      const resolved = normalizeOptions(options)
+      const people = (Array.isArray(state?.persons) ? state.persons : [])
+        .map((person) => derivePerson(person, resolved))
+
+      const byCurrency = {}
+      for (const person of people) {
+        for (const [currency, bucket] of Object.entries(person.byCurrency)) {
+          const target = byCurrency[currency] ?? (byCurrency[currency] = emptyBucket())
+          target.lentPrincipal = round2(target.lentPrincipal + bucket.lentPrincipal)
+          target.borrowedPrincipal = round2(target.borrowedPrincipal + bucket.borrowedPrincipal)
+          target.lentDue = round2(target.lentDue + bucket.lentDue)
+          target.borrowedDue = round2(target.borrowedDue + bucket.borrowedDue)
+          target.interest = round2(target.interest + bucket.interest)
+          target.penalty = round2(target.penalty + bucket.penalty)
+        }
+      }
+      const totals = sumBuckets(byCurrency)
+
+      const activeLoans = people.flatMap((person) => person.loans).filter((loan) => loan.status !== 'closed')
+      const overdueLoans = activeLoans.filter((loan) => loan.isOverdue)
+
+      const overdueByCurrency = {}
+      for (const loan of overdueLoans) {
+        const entry = overdueByCurrency[loan.currency] ?? (overdueByCurrency[loan.currency] = { count: 0, amount: 0 })
+        entry.count += 1
+        entry.amount = round2(entry.amount + loan.totalDue)
+      }
+      for (const [currency, bucket] of Object.entries(byCurrency)) {
+        bucket.net = round2(bucket.lentDue - bucket.borrowedDue)
+        bucket.position = positionOf(bucket.net)
+        bucket.overdueCount = overdueByCurrency[currency]?.count ?? 0
+        bucket.overdueAmount = overdueByCurrency[currency]?.amount ?? 0
+      }
+
+      return {
+        asOf: resolved.asOf,
+        people,
+        peopleCount: people.length,
+        loanCount: people.reduce((sum, person) => sum + person.loanCount, 0),
+        activeLoanCount: activeLoans.length,
+        receivables: totals.lentDue,
+        payables: totals.borrowedDue,
+        net: round2(totals.lentDue - totals.borrowedDue),
+        totalInterest: totals.interest,
+        totalPenalty: totals.penalty,
+        totalPrincipal: round2(totals.lentPrincipal + totals.borrowedPrincipal),
+        totalLentPrincipal: totals.lentPrincipal,
+        totalBorrowedPrincipal: totals.borrowedPrincipal,
+        totalDue: round2(totals.lentDue + totals.borrowedDue),
+        overdueCount: overdueLoans.length,
+        overdueAmount: round2(overdueLoans.reduce((sum, loan) => sum + loan.totalDue, 0)),
+        oldestDueDate: activeLoans
+          .map((loan) => loan.dueDate)
+          .filter((date) => typeof date === 'string' && date.length === 10)
+          .sort()[0] ?? null,
+        currencies: totals.currencies,
+        overdueByCurrency,
+        byCurrency,
+      }
+    }
+
+    /**
+     * Copy of the people sorted by outstanding total, largest first.
+     * @param people - derived people.
+     * @returns a new sorted array.
+     */
+    function sortPeopleByDue(people) {
+      return [...(Array.isArray(people) ? people : [])].sort((a, b) => {
+        if (b.totalDue !== a.totalDue) return b.totalDue - a.totalDue
+        if (b.net !== a.net) return b.net - a.net
+        return a.name.localeCompare(b.name)
+      })
+    }
+
+    /**
+     * Validate a person draft.
+     * @param person - the candidate.
+     * @returns `{ ok, errors }` where `errors` maps field to message key.
+     */
+    function validatePerson(person) {
+      const errors = {}
+      if (String(person?.name ?? '').trim() === '') errors.name = 'error.nameRequired'
+      return { ok: Object.keys(errors).length === 0, errors }
+    }
+
+    /**
+     * Validate a loan draft before it is saved.
+     * @param loan - the candidate.
+     * @param options - `{ persons }` to check the person link.
+     * @returns `{ ok, errors }` where `errors` maps field to message key.
+     */
+    function validateLoan(loan, options = {}) {
+      const errors = {}
+      const principal = num(loan?.principal, Number.NaN)
+      if (!Number.isFinite(principal) || principal <= 0) errors.principal = 'error.principalPositive'
+
+      const currency = String(loan?.currency ?? '').trim().toUpperCase()
+      if (!/^[A-Z]{3}$/.test(currency)) errors.currency = 'error.currencyCode'
+
+      const startDate = toISODate(loan?.startDate)
+      if (startDate === null) {
+        errors.startDate = 'error.startDateRequired'
+      } else if (String(loan?.dueDate ?? '').trim() !== '') {
+        const dueDate = toISODate(loan.dueDate)
+        if (dueDate === null) errors.dueDate = 'error.dueDateInvalid'
+        else if (dueDate < startDate) errors.dueDate = 'error.dueDateBeforeStart'
+      }
+
+      const rateType = normRateType(loan?.rateType)
+      if (rateType !== 'none') {
+        const rate = num(loan?.rateValue, Number.NaN)
+        if (!Number.isFinite(rate) || rate < 0) errors.rateValue = 'error.rateNonNegative'
+        else if (rate === 0) errors.rateValue = 'error.ratePositive'
+      }
+
+      if (!DIRECTIONS.includes(loan?.direction)) errors.direction = 'error.direction'
+      if (!STATUSES.includes(loan?.status)) errors.status = 'error.status'
+      if (options.persons !== undefined && !options.persons.some((person) => person.id === loan?.personId)) {
+        errors.personId = 'error.personRequired'
+      }
+      return { ok: Object.keys(errors).length === 0, errors }
+    }
+
+    /**
+     * Validate a payment draft.
+     * @param payment - the candidate.
+     * @returns `{ ok, errors }` where `errors` maps field to message key.
+     */
+    function validatePayment(payment) {
+      const errors = {}
+      const amount = num(payment?.amount, Number.NaN)
+      if (!Number.isFinite(amount) || amount <= 0) errors.amount = 'error.amountPositive'
+      if (toISODate(payment?.date) === null) errors.date = 'error.paymentDateRequired'
+      if (!ALLOCATIONS.includes(payment?.allocation)) errors.allocation = 'error.allocation'
+      return { ok: Object.keys(errors).length === 0, errors }
+    }
+    /**
+     * Debt Tracker — deterministic sample data.
+     *
+     * Every date is an offset from the reference date, so the demo always looks
+     * current and the figures a test asserts stay stable for a fixed `asOf`.
+     * Anna deliberately carries three loans in two directions to show per-person
+     * aggregation, partial payment, penalty accrual and a net position.
+     */
+
+    /**
+     * Build the sample tracker state.
+     * @param asOf - reference date (`YYYY-MM-DD`); defaults to today.
+     * @returns a fresh state object with four people.
+     */
+    function createSeed(asOf = todayISO()) {
+      const reference = toISODate(asOf) ?? todayISO()
+      const day = (offset) => addDays(reference, offset)
+
+      return {
+        version: 1,
+        currency: 'RUB',
+        penalty: { enabled: true, annualRate: 24 },
+        persons: [
+          {
+            id: 'p-anna',
+            name: 'Анна Смирнова',
+            contact: '+7 916 204-11-38',
+            note: 'Соседка, помогала с ремонтом',
+            loans: [
+              {
+                id: 'l-anna-1',
+                personId: 'p-anna',
+                direction: 'lent',
+                principal: 150000,
+                currency: 'RUB',
+                startDate: day(-180),
+                dueDate: day(30),
+                rateType: 'annual',
+                rateValue: 12.5,
+                status: 'partially_paid',
+                note: 'На ремонт кухни',
+                payments: [
+                  { date: day(-90), amount: 40000, allocation: 'interest_first' },
+                ],
+              },
+              {
+                id: 'l-anna-2',
+                personId: 'p-anna',
+                direction: 'lent',
+                principal: 60000,
+                currency: 'RUB',
+                startDate: day(-45),
+                dueDate: day(-5),
+                rateType: 'monthly',
+                rateValue: 3,
+                status: 'active',
+                note: 'До зарплаты, короткий заём',
+                payments: [],
+              },
+              {
+                id: 'l-anna-3',
+                personId: 'p-anna',
+                direction: 'borrowed',
+                principal: 25000,
+                currency: 'RUB',
+                startDate: day(-60),
+                dueDate: null,
+                rateType: 'none',
+                rateValue: 0,
+                status: 'active',
+                note: 'Она одолжила мне на билеты',
+                payments: [],
+              },
+            ],
+          },
+          {
+            id: 'p-dmitry',
+            name: 'Дмитрий Волков',
+            contact: 'd.volkov@example.com',
+            note: 'Коллега',
+            loans: [
+              {
+                id: 'l-dmitry-1',
+                personId: 'p-dmitry',
+                direction: 'lent',
+                principal: 80000,
+                currency: 'RUB',
+                startDate: day(-400),
+                dueDate: day(-40),
+                rateType: 'annual',
+                rateValue: 10,
+                status: 'partially_paid',
+                note: 'На ноутбук, просрочка',
+                payments: [
+                  { date: day(-200), amount: 30000, allocation: 'principal_first' },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'p-maria',
+            name: 'Мария Ковалёва',
+            contact: '+7 903 771-02-15',
+            note: 'Закрытый заём с фиксированным процентом',
+            loans: [
+              {
+                id: 'l-maria-1',
+                personId: 'p-maria',
+                direction: 'lent',
+                principal: 20000,
+                currency: 'RUB',
+                startDate: day(-300),
+                dueDate: day(-100),
+                rateType: 'fixed',
+                rateValue: 1500,
+                status: 'closed',
+                note: 'Фиксированные 1500 ₽ сверху',
+                payments: [
+                  { date: day(-105), amount: 21500, allocation: 'interest_first' },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'p-igor',
+            name: 'Игорь Петров',
+            contact: '@igor_p',
+            note: 'Занял у меня в долларах',
+            loans: [
+              {
+                id: 'l-igor-1',
+                personId: 'p-igor',
+                direction: 'borrowed',
+                principal: 1200,
+                currency: 'USD',
+                startDate: day(-20),
+                dueDate: day(40),
+                rateType: 'annual',
+                rateValue: 8,
+                status: 'active',
+                note: 'Вторая валюта — показывается отдельной строкой',
+                payments: [],
+              },
+            ],
+          },
+        ],
+      }
+    }
+
+    /**
+     * An empty tracker state for a first run.
+     * @returns a state with no people.
+     */
+    function createEmptyState() {
+      return {
+        version: 1,
+        currency: 'RUB',
+        penalty: { enabled: false, annualRate: 24 },
+        persons: [],
+      }
+    }
+    return { parseDateOnly, toISODate, diffDays, todayISO, round2, num, addDays, normRateType, normDirection, normStatus, normAllocation, normalizePenalty, elapsedDays, interestAt, deriveLoan, normalizeOptions, emptyBucket, positionOf, addToBucket, sumBuckets, planRenewal, derivePerson, deriveDashboard, sortPeopleByDue, validatePerson, validateLoan, validatePayment, MS_PER_DAY, PERIOD_BASE, DIRECTIONS, RATE_TYPES, STATUSES, ALLOCATIONS, createSeed, createEmptyState }
+  })()
+  const en = {
+      panel: 'Debt Tracker',
+      'app.title': 'Debt Tracker',
+      'app.subtitle': 'Loans and interest, per person',
+      'app.asOf': 'as of {date}',
+      'nav.back': 'Back',
+      'nav.close': 'Back to chat',
+      'card.receivables': 'Receivables',
+      'card.payables': 'Payables',
+      'card.net': 'Net balance',
+      'card.interest': 'Accrued interest',
+      'card.interest.hint': 'active loans',
+      'card.net.positive': 'In my favour',
+      'card.net.negative': 'Against me',
+      'card.net.settled': 'Settled',
+      'people.title': 'People',
+      'people.empty.title': 'No people yet',
+      'people.empty.body': 'Add a person, then add their loans. Interest is calculated for you.',
+      'people.owedToMe': 'They owe me',
+      'people.iOwe': 'I owe them',
+      'people.settled': 'Settled',
+      'people.loans.one': '{count} loan',
+      'people.loans.few': '{count} loans',
+      'people.loans.many': '{count} loans',
+      'people.loans.other': '{count} loans',
+      'people.open': 'Open {name}',
+      'people.net': 'net',
+      'people.totalDue': 'Total due',
+      'person.totalDueGross': 'Total due, both directions',
+      'people.activeOfAll': 'active / all',
+      'summary.lentRemaining': 'Remaining lent',
+      'summary.borrowedRemaining': 'Remaining borrowed',
+      'payment.delete': 'Delete payment',
+      'confirm.deletePayment': 'Delete this payment? The loan will be recalculated.',
+      'loan.lent': 'Lent out',
+      'loan.borrowed': 'Borrowed',
+      'loan.principal': 'Principal',
+      'loan.remainingPrincipal': 'Remaining principal',
+      'loan.accrued': 'Accrued interest',
+      'loan.penalty': 'Penalty',
+      'loan.paid': 'Paid',
+      'loan.totalDue': 'Total due',
+      'loan.rate.annual': '{value}% / year',
+      'loan.rate.monthly': '{value}% / month',
+      'loan.rate.daily': '{value}% / day',
+      'loan.rate.fixed': 'Fixed {value}',
+      'loan.rate.none': 'No interest',
+      'loan.days': '{days} d',
+      'loan.overdueDays': 'Overdue {days} d',
+      'loan.start': 'Start',
+      'loan.due': 'Due',
+      'loan.dueNone': 'no due date',
+      'loan.status.active': 'Active',
+      'loan.status.partially_paid': 'Partially paid',
+      'loan.status.closed': 'Closed',
+      'loan.progress': '{percent}% paid',
+      'loan.payments': 'Payments',
+      'loan.addPayment': 'Add payment',
+      'loan.edit': 'Edit',
+      'loan.renew': 'Renew',
+      'loan.delete': 'Delete loan',
+      'loan.close': 'Mark closed',
+      'loan.reopen': 'Reopen',
+      'action.addPerson': 'Add person',
+      'action.addLoan': 'Add loan',
+      'action.demo': 'Load demo',
+      'action.clear': 'Clear all',
+      'action.keepDemo': 'Keep as mine',
+      'action.save': 'Save',
+      'action.cancel': 'Cancel',
+      'action.edit': 'Edit',
+      'action.settings': 'Settings',
+      'action.close': 'Close',
+      'action.deletePerson': 'Delete person',
+      'status.derivedNote': 'Computed status: {status}',
+      'loans.title': 'Loans',
+      'person.lentDue': 'Owed to me',
+      'person.borrowedDue': 'I owe',
+      'rateType.annual': '% per year',
+      'rateType.monthly': '% per month',
+      'rateType.daily': '% per day',
+      'rateType.fixed': 'Fixed amount',
+      'rateType.none': 'No interest',
+      'rateValue.amount': 'Amount',
+      'form.newPerson': 'New person',
+      'form.editPerson': 'Edit person',
+      'form.newLoan': 'New loan',
+      'form.editLoan': 'Edit loan',
+      'form.renewLoan': 'Renew loan',
+      'renew.hint': 'The outstanding balance of the loan from {date} moves into this loan with the new interest. The old loan is closed and keeps a settlement payment.',
+      'form.payment': 'Add payment',
+      'field.name': 'Name',
+      'field.contact': 'Contact',
+      'field.note': 'Note',
+      'field.person': 'Person',
+      'field.direction': 'Direction',
+      'field.principal': 'Principal',
+      'field.currency': 'Currency',
+      'field.startDate': 'Start date',
+      'field.dueDate': 'Due date',
+      'field.rateType': 'Interest type',
+      'field.rateValue': 'Rate',
+      'field.status': 'Status',
+      'field.paymentDate': 'Payment date',
+      'field.amount': 'Amount',
+      'field.allocation': 'Allocation',
+      'allocation.interest_first': 'Interest first',
+      'allocation.principal_first': 'Principal first',
+      'preview.title': 'Preview',
+      'preview.hint': 'Calculated as of {date}',
+      'preview.payFull': 'Full balance',
+      'preview.payInterest': 'Interest only',
+      'preview.afterPayment': 'After this payment',
+      'settings.penalty': 'Charge penalty interest on overdue loans',
+      'settings.penaltyRate': 'Penalty rate, % per year',
+      'storage.error': 'This browser refused to save. Changes will be lost when the page reloads.',
+      'demo.banner': 'Demo data is loaded. Clear it when you start tracking for real.',
+      'confirm.clear': 'Delete every person and loan? This cannot be undone.',
+      'confirm.loadDemo': 'Replace all current data with the demo set?',
+      'confirm.deletePerson': 'Delete {name} and all their loans?',
+      'confirm.deleteLoan': 'Delete this loan?',
+      'summary.interest': 'Interest',
+      'overdue.banner': '{count} overdue — {amount}',
+      'other.currencies': 'Also',
+      'person.totals': 'Totals',
+      'person.emptyLoans': 'No loans for this person yet.',
+      'error.nameRequired': 'Enter a name',
+      'error.principalPositive': 'Principal must be greater than zero',
+      'error.currencyCode': 'Use a three-letter currency code',
+      'error.startDateRequired': 'Pick a start date',
+      'error.dueDateInvalid': 'Due date is not a valid date',
+      'error.dueDateBeforeStart': 'Due date is before the start date',
+      'error.rateNonNegative': 'Rate cannot be negative',
+      'error.ratePositive': 'Enter a rate greater than zero',
+      'error.personRequired': 'Pick a person',
+      'error.direction': 'Pick a direction',
+      'error.status': 'Pick a status',
+      'error.amountPositive': 'Amount must be greater than zero',
+      'error.paymentDateRequired': 'Pick a payment date',
+      'error.allocation': 'Pick an allocation',
+      'error.personExists': 'A person with this name already exists',
+  }
+  const ru = {
+      panel: 'Долги',
+      'app.title': 'Долги',
+      'app.subtitle': 'Займы и проценты по людям',
+      'app.asOf': 'на {date}',
+      'nav.back': 'Назад',
+      'nav.close': 'Вернуться в чат',
+      'card.receivables': 'Мне должны',
+      'card.payables': 'Я должен',
+      'card.net': 'Баланс',
+      'card.interest': 'Проценты',
+      'card.interest.hint': 'по активным займам',
+      'card.net.positive': 'В мою пользу',
+      'card.net.negative': 'Не в мою пользу',
+      'card.net.settled': 'Всё закрыто',
+      'people.title': 'Люди',
+      'people.empty.title': 'Пока никого нет',
+      'people.empty.body': 'Добавьте человека, затем его займы. Проценты посчитаются сами.',
+      'people.owedToMe': 'Должны мне',
+      'people.iOwe': 'Я должен',
+      'people.settled': 'Закрыто',
+      'people.loans.one': '{count} заём',
+      'people.loans.few': '{count} займа',
+      'people.loans.many': '{count} займов',
+      'people.loans.other': '{count} займов',
+      'people.open': 'Открыть {name}',
+      'people.net': 'нетто',
+      'people.totalDue': 'Итого к оплате',
+      'person.totalDueGross': 'Итого к оплате, оба направления',
+      'people.activeOfAll': 'активных / всего',
+      'summary.lentRemaining': 'Остаток: я одолжил',
+      'summary.borrowedRemaining': 'Остаток: я занял',
+      'payment.delete': 'Удалить платёж',
+      'confirm.deletePayment': 'Удалить этот платёж? Заём будет пересчитан.',
+      'loan.lent': 'Я одолжил',
+      'loan.borrowed': 'Я занял',
+      'loan.principal': 'Основной долг',
+      'loan.remainingPrincipal': 'Остаток долга',
+      'loan.accrued': 'Проценты',
+      'loan.penalty': 'Пеня',
+      'loan.paid': 'Оплачено',
+      'loan.totalDue': 'К оплате',
+      'loan.rate.annual': '{value}% годовых',
+      'loan.rate.monthly': '{value}% в месяц',
+      'loan.rate.daily': '{value}% в день',
+      'loan.rate.fixed': 'Фиксированные {value}',
+      'loan.rate.none': 'Без процентов',
+      'loan.days': '{days} дн.',
+      'loan.overdueDays': 'Просрочка {days} дн.',
+      'loan.start': 'Начало',
+      'loan.due': 'Срок',
+      'loan.dueNone': 'без срока',
+      'loan.status.active': 'Активный',
+      'loan.status.partially_paid': 'Частично оплачен',
+      'loan.status.closed': 'Закрыт',
+      'loan.progress': 'оплачено {percent}%',
+      'loan.payments': 'Платежи',
+      'loan.addPayment': 'Платёж',
+      'loan.edit': 'Изменить',
+      'loan.renew': 'Продлить',
+      'loan.delete': 'Удалить заём',
+      'loan.close': 'Закрыть заём',
+      'loan.reopen': 'Открыть заново',
+      'action.addPerson': 'Добавить человека',
+      'action.addLoan': 'Добавить заём',
+      'action.demo': 'Загрузить демо',
+      'action.clear': 'Очистить всё',
+      'action.keepDemo': 'Оставить как есть',
+      'action.save': 'Сохранить',
+      'action.cancel': 'Отмена',
+      'action.edit': 'Изменить',
+      'action.settings': 'Настройки',
+      'action.close': 'Закрыть',
+      'action.deletePerson': 'Удалить человека',
+      'status.derivedNote': 'Расчётный статус: {status}',
+      'loans.title': 'Займы',
+      'person.lentDue': 'Мне должны',
+      'person.borrowedDue': 'Я должен',
+      'rateType.annual': '% годовых',
+      'rateType.monthly': '% в месяц',
+      'rateType.daily': '% в день',
+      'rateType.fixed': 'Фиксированная сумма',
+      'rateType.none': 'Без процентов',
+      'rateValue.amount': 'Сумма',
+      'form.newPerson': 'Новый человек',
+      'form.editPerson': 'Изменить человека',
+      'form.newLoan': 'Новый заём',
+      'form.editLoan': 'Изменить заём',
+      'form.renewLoan': 'Продлить заём',
+      'renew.hint': 'Остаток по займу от {date} переносится в этот заём с новыми процентами. Старый заём закрывается, в нём остаётся платёж на сумму остатка.',
+      'form.payment': 'Добавить платёж',
+      'field.name': 'Имя',
+      'field.contact': 'Контакт',
+      'field.note': 'Заметка',
+      'field.person': 'Человек',
+      'field.direction': 'Направление',
+      'field.principal': 'Сумма',
+      'field.currency': 'Валюта',
+      'field.startDate': 'Дата выдачи',
+      'field.dueDate': 'Срок возврата',
+      'field.rateType': 'Тип процентов',
+      'field.rateValue': 'Ставка',
+      'field.status': 'Статус',
+      'field.paymentDate': 'Дата платежа',
+      'field.amount': 'Сумма',
+      'field.allocation': 'Распределение',
+      'allocation.interest_first': 'Сначала проценты',
+      'allocation.principal_first': 'Сначала долг',
+      'preview.title': 'Предпросмотр',
+      'preview.hint': 'Расчёт на {date}',
+      'preview.payFull': 'Вся сумма',
+      'preview.payInterest': 'Только проценты',
+      'preview.afterPayment': 'После этого платежа',
+      'settings.penalty': 'Начислять пеню за просрочку',
+      'settings.penaltyRate': 'Ставка пени, % годовых',
+      'storage.error': 'Браузер не смог сохранить данные. Изменения пропадут после перезагрузки.',
+      'demo.banner': 'Загружены демо-данные. Очистите их, когда начнёте вести учёт по-настоящему.',
+      'confirm.clear': 'Удалить всех людей и все займы? Действие необратимо.',
+      'confirm.loadDemo': 'Заменить текущие данные демонстрационными?',
+      'confirm.deletePerson': 'Удалить {name} и все его займы?',
+      'confirm.deleteLoan': 'Удалить этот заём?',
+      'summary.interest': 'Проценты',
+      'overdue.banner': 'Просрочено: {count} на {amount}',
+      'other.currencies': 'Также',
+      'person.totals': 'Итоги',
+      'person.emptyLoans': 'У этого человека пока нет займов.',
+      'error.nameRequired': 'Введите имя',
+      'error.principalPositive': 'Сумма должна быть больше нуля',
+      'error.currencyCode': 'Нужен трёхбуквенный код валюты',
+      'error.startDateRequired': 'Укажите дату выдачи',
+      'error.dueDateInvalid': 'Некорректная дата срока',
+      'error.dueDateBeforeStart': 'Срок раньше даты выдачи',
+      'error.rateNonNegative': 'Ставка не может быть отрицательной',
+      'error.ratePositive': 'Укажите ставку больше нуля',
+      'error.personRequired': 'Выберите человека',
+      'error.direction': 'Выберите направление',
+      'error.status': 'Выберите статус',
+      'error.amountPositive': 'Сумма должна быть больше нуля',
+      'error.paymentDateRequired': 'Укажите дату платежа',
+      'error.allocation': 'Выберите распределение',
+      'error.personExists': 'Человек с таким именем уже есть',
+  }
+/**
+ * Debt Tracker — standalone single-file app (vanilla DOM, no framework).
+ *
+ * `tools/build-standalone.mjs` inlines the shared maths (`lib/calc.js`,
+ * `lib/seed.js`), the plugin's own locale dictionaries and CSS, and the theme
+ * tokens into one `index.html`, so the result runs from a file, a static host,
+ * or GitHub Pages with no build step and no network.
+ *
+ * The whole render is a string: state changes call `render()`. Modal forms are
+ * uncontrolled on purpose — typing never re-renders them, only the preview
+ * block is patched, so the caret never jumps.
+ */
+
+const STORAGE_KEY = 'debt-tracker:v1'
+const CURRENCIES = ['RUB', 'USD', 'EUR', 'KZT', 'BYN', 'GEL']
+const NUMBER_LOCALE = { ru: 'ru-RU', en: 'en-US' }
+
+let lang = /^ru\b/i.test(navigator.language || '') ? 'ru' : 'en'
+let asOf = calc.todayISO()
+let view = { kind: 'dashboard', id: null }
+let modal = null
+
+const stored = loadState()
+let runtime = stored ?? { ...calc.createSeed(asOf), demo: true }
+
+const app = document.getElementById('app')
+
+/* ------------------------------------------------------------------ */
+/* helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The translate seat for the active language.
+ * @param key - dictionary key.
+ * @param params - `{name}` replacements.
+ * @returns the localized string, or the key itself when it is missing.
+ */
+function t(key, params) {
+  const source = (lang === 'ru' ? ru : en)
+  const template = source[key] ?? en[key] ?? key
+  if (!params) return template
+  return template.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match))
+}
+
+/** BCP-47 tag for number and date formatting. */
+function locale() {
+  return NUMBER_LOCALE[lang] ?? 'en-US'
+}
+
+/**
+ * Format a money amount with its currency.
+ * @param amount - the value.
+ * @param currency - ISO 4217 code.
+ * @returns the formatted amount.
+ */
+function money(amount, currency) {
+  const value = Number.isFinite(Number(amount)) ? Number(amount) : 0
+  try {
+    return new Intl.NumberFormat(locale(), {
+      style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2,
+    }).format(value)
+  } catch {
+    return `${value.toFixed(2)} ${currency}`
+  }
+}
+
+/**
+ * Format a `YYYY-MM-DD` date.
+ * @param iso - the date.
+ * @returns the formatted date.
+ */
+function formatDate(iso) {
+  if (typeof iso !== 'string' || iso.length !== 10) return ''
+  const date = new Date(`${iso}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return iso
+  try {
+    return new Intl.DateTimeFormat(locale(), { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
+  } catch {
+    return iso
+  }
+}
+
+/**
+ * Avatar initials for a name.
+ * @param name - the person's name.
+ * @returns up to two letters.
+ */
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+/**
+ * Russian/English plural form for a count.
+ * @param count - the amount.
+ * @param russian - whether the language is Russian.
+ * @returns one/few/many/other.
+ */
+function pluralForm(count, russian) {
+  if (!russian) return count === 1 ? 'one' : 'other'
+  const mod10 = Math.abs(count) % 10
+  const mod100 = Math.abs(count) % 100
+  if (mod10 === 1 && mod100 !== 11) return 'one'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'few'
+  return 'many'
+}
+
+/**
+ * A loan count with the right plural form.
+ * @param count - the number of loans.
+ * @returns the localized label.
+ */
+function loanCountLabel(count) {
+  return t(`people.loans.${pluralForm(count, lang === 'ru')}`, { count })
+}
+
+/**
+ * Escape text for interpolation into HTML.
+ * @param value - anything printable.
+ * @returns the escaped text.
+ */
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[character]))
+}
+
+/**
+ * Read the stored app state.
+ * @returns the state, or null when absent or unreadable.
+ */
+function loadState() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    if (raw === null) return null
+    const parsed = JSON.parse(raw)
+    if (parsed === null || typeof parsed !== 'object' || !Array.isArray(parsed.persons)) return null
+    return {
+      version: 1,
+      currency: typeof parsed.currency === 'string' ? parsed.currency : 'RUB',
+      penalty: parsed.penalty ?? { enabled: false, annualRate: 24 },
+      demo: parsed.demo === true,
+      persons: parsed.persons,
+    }
+  } catch {
+    return null
+  }
+}
+
+/** Persist the current state. */
+function saveState() {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(runtime))
+  } catch {
+    // A blocked storage area must not break the app.
+  }
+}
+
+/**
+ * A stable identifier for a new record.
+ * @param prefix - short kind prefix.
+ * @returns the identifier.
+ */
+function newId(prefix) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+/** Derived dashboard plus the resolved base currency. */
+function derive() {
+  const dashboard = calc.deriveDashboard(runtime, { asOf, penalty: runtime.penalty })
+  let baseCurrency = runtime.currency
+  if (!dashboard.currencies.includes(baseCurrency)) baseCurrency = dashboard.currencies[0] ?? runtime.currency ?? 'RUB'
+  return { dashboard, baseCurrency }
+}
+
+/** Commit a mutation and repaint. */
+function commit() {
+  saveState()
+  render()
+}
+
+/* ------------------------------------------------------------------ */
+/* views                                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One loan card.
+ * @param loan - a derived loan.
+ * @returns the card markup.
+ */
+function loanCard(loan) {
+  const amount = (value) => money(value, loan.currency)
+  const rateNumber = new Intl.NumberFormat(locale(), { maximumFractionDigits: 2 }).format(loan.rateValue)
+  const rateKey = {
+    annual: 'loan.rate.annual',
+    monthly: 'loan.rate.monthly',
+    daily: 'loan.rate.daily',
+  }[loan.rateType]
+  const rateText = loan.rateType === 'none'
+    ? t('loan.rate.none')
+    : loan.rateType === 'fixed'
+      ? t('loan.rate.fixed', { value: amount(loan.rateValue) })
+      : t(rateKey ?? 'loan.rate.annual', { value: rateNumber })
+  const percent = Math.round(loan.progress * 100)
+  const payments = loan.payments.length === 0 ? '' : `
+        <div class="dt-payments">
+          <div class="dt-loan-stat-label" style="margin-bottom:4px">${esc(t('loan.payments'))}</div>
+          ${loan.payments.map((payment) => `
+            <div class="dt-payment">
+              <span>${esc(formatDate(payment.date))}</span>
+              <span style="margin-left:auto">${esc(amount(payment.amount))}</span>
+              <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="delete-payment"
+                data-person="${esc(loan.personId)}" data-loan="${esc(loan.id)}" data-index="${payment.index}"
+                aria-label="${esc(t('payment.delete'))}" title="${esc(t('payment.delete'))}">&times;</button>
+            </div>`).join('')}
+        </div>`
+
+  return `
+      <article class="dt-loan">
+        <div class="dt-loan-top">
+          <div class="dt-loan-title">
+            <span class="dt-tag ${loan.direction === 'borrowed' ? 'dt-tag-red' : 'dt-tag-green'}">${esc(loan.direction === 'borrowed' ? t('loan.borrowed') : t('loan.lent'))}</span>
+            <span class="dt-tag">${esc(rateText)}</span>
+            ${loan.status === 'closed' ? `<span class="dt-tag">${esc(t('loan.status.closed'))}</span>` : ''}
+            ${loan.isOverdue ? `<span class="dt-tag dt-tag-orange">${esc(t('loan.overdueDays', { days: loan.overdueDays }))}</span>` : ''}
+          </div>
+          <div class="dt-loan-amount ${loan.isOverdue ? 'dt-orange' : ''}">
+            ${esc(amount(loan.totalDue))}
+            <small>${esc(t('loan.totalDue'))}</small>
+          </div>
+        </div>
+        ${loan.note ? `<p class="dt-loan-note">${esc(loan.note)}</p>` : ''}
+        <div class="dt-loan-stats">
+          <div><div class="dt-loan-stat-label">${esc(t('loan.principal'))}</div><div class="dt-loan-stat-value">${esc(amount(loan.principal))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('loan.remainingPrincipal'))}</div><div class="dt-loan-stat-value">${esc(amount(loan.remainingPrincipal))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('loan.accrued'))}</div><div class="dt-loan-stat-value">${esc(amount(loan.accruedInterest))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('loan.penalty'))}</div><div class="dt-loan-stat-value ${loan.penaltyInterest > 0 ? 'dt-orange' : ''}">${esc(amount(loan.penaltyInterest))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('loan.paid'))}</div><div class="dt-loan-stat-value">${esc(amount(loan.totalPaid))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('loan.start'))}</div><div class="dt-loan-stat-value">${esc(formatDate(loan.startDate))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('loan.due'))}</div><div class="dt-loan-stat-value">${esc(loan.dueDate ? formatDate(loan.dueDate) : t('loan.dueNone'))}</div></div>
+          <div><div class="dt-loan-stat-label">${esc(t('field.status'))}</div><div class="dt-loan-stat-value">${esc(t(`loan.status.${loan.status}`))}</div></div>
+        </div>
+        <div class="dt-progress" role="progressbar" aria-label="${esc(t('loan.progress', { percent }))}"
+          aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+          <div class="dt-progress-fill" style="width:${percent}%"></div>
+        </div>
+        ${payments}
+        <div class="dt-loan-actions">
+          <button type="button" class="dt-btn dt-btn-sm" data-act="add-payment" data-person="${esc(loan.personId)}" data-loan="${esc(loan.id)}">${esc(t('loan.addPayment'))}</button>
+          <button type="button" class="dt-btn dt-btn-sm" data-act="edit-loan" data-person="${esc(loan.personId)}" data-loan="${esc(loan.id)}">${esc(t('loan.edit'))}</button>
+          ${loan.totalDue > 0.005 ? `<button type="button" class="dt-btn dt-btn-sm" data-act="renew-loan" data-person="${esc(loan.personId)}" data-loan="${esc(loan.id)}">${esc(t('loan.renew'))}</button>` : ''}
+          <button type="button" class="dt-btn dt-btn-sm" data-act="toggle-loan" data-person="${esc(loan.personId)}" data-loan="${esc(loan.id)}">${esc(loan.isSettledByStored ? t('loan.reopen') : t('loan.close'))}</button>
+          <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="delete-loan" data-person="${esc(loan.personId)}" data-loan="${esc(loan.id)}">${esc(t('loan.delete'))}</button>
+        </div>
+      </article>`
+}
+
+/**
+ * Person detail view.
+ * @param person - a derived person.
+ * @param baseCurrency - the dashboard base currency.
+ * @returns the markup.
+ */
+function personView(person, baseCurrency) {
+  const empty = {
+    lentDue: 0, borrowedDue: 0, lentPrincipal: 0, borrowedPrincipal: 0,
+    interest: 0, penalty: 0, net: 0, position: 'settled',
+  }
+  const primary = person.currencies.includes(baseCurrency) ? baseCurrency : person.currencies[0] ?? baseCurrency
+  const bucket = person.byCurrency[primary] ?? empty
+  const others = person.currencies.filter((code) => code !== primary)
+  const positionWord = bucket.position === 'owedToMe' ? t('people.owedToMe') : bucket.position === 'iOwe' ? t('people.iOwe') : t('people.settled')
+  const tone = bucket.position === 'owedToMe' ? 'dt-green' : bucket.position === 'iOwe' ? 'dt-red' : ''
+  const totalDue = calc.round2(bucket.lentDue + bucket.borrowedDue)
+
+  const also = others.length === 0 ? '' : `
+            <div class="dt-also">
+              <span>${esc(t('other.currencies'))}:</span>
+              ${others.map((code) => {
+                const other = person.byCurrency[code] ?? empty
+                return `<span>${esc(code)} ${esc(money(calc.round2(other.lentDue + other.borrowedDue), code))}</span>`
+              }).join('')}
+            </div>`
+
+  return `
+      <button type="button" class="dt-back" data-act="back">&larr; ${esc(t('nav.back'))}</button>
+      <div class="dt-detail-head">
+        <div style="flex:1 1 auto;min-width:0">
+          <h2 class="dt-detail-name">${esc(person.name)}</h2>
+          <p class="dt-detail-meta">${esc([person.contact, loanCountLabel(person.loanCount)].filter(Boolean).join(' \u00b7 '))}</p>
+        </div>
+        <div class="dt-actions">
+          <button type="button" class="dt-btn" data-act="edit-person" data-person="${esc(person.id)}">${esc(t('action.edit'))}</button>
+          <button type="button" class="dt-btn dt-btn-primary" data-act="add-loan" data-person="${esc(person.id)}">${esc(t('action.addLoan'))}</button>
+          <button type="button" class="dt-btn dt-btn-ghost" data-act="delete-person" data-person="${esc(person.id)}">${esc(t('action.deletePerson'))}</button>
+        </div>
+      </div>
+      <div class="dt-position">
+        <div>
+          <div class="dt-position-label">${esc(t('person.totals'))} &middot; ${esc(primary)}</div>
+          <div class="dt-mini">
+            <span>${esc(t('summary.lentRemaining'))}: ${esc(money(bucket.lentPrincipal, primary))}</span>
+            <span>${esc(t('summary.borrowedRemaining'))}: ${esc(money(bucket.borrowedPrincipal, primary))}</span>
+            <span>${esc(t('summary.interest'))}: ${esc(money(bucket.interest, primary))}</span>
+          </div>
+          ${also}
+        </div>
+        <div style="text-align:right">
+          <div class="dt-position-label">${esc(positionWord)}</div>
+          <div class="dt-position-value ${tone}">${esc(money(bucket.net, primary))}</div>
+        </div>
+      </div>
+      <div class="dt-grid">
+        <div class="dt-stat"><div class="dt-stat-label">${esc(t('person.totalDueGross'))}</div><div class="dt-stat-value">${esc(money(totalDue, primary))}</div></div>
+        <div class="dt-stat"><div class="dt-stat-label">${esc(t('person.lentDue'))}</div><div class="dt-stat-value dt-green">${esc(money(bucket.lentDue, primary))}</div></div>
+        <div class="dt-stat"><div class="dt-stat-label">${esc(t('person.borrowedDue'))}</div><div class="dt-stat-value dt-red">${esc(money(bucket.borrowedDue, primary))}</div></div>
+        <div class="dt-stat"><div class="dt-stat-label">${esc(t('loan.accrued'))}</div><div class="dt-stat-value">${esc(money(bucket.interest, primary))}</div></div>
+        <div class="dt-stat"><div class="dt-stat-label">${esc(t('loan.penalty'))}</div><div class="dt-stat-value ${bucket.penalty > 0 ? 'dt-orange' : ''}">${esc(money(bucket.penalty, primary))}</div></div>
+        <div class="dt-stat"><div class="dt-stat-label">${esc(t('people.activeOfAll'))}</div><div class="dt-stat-value">${person.activeLoanCount} / ${person.loanCount}</div></div>
+      </div>
+      <div class="dt-section-head">
+        <h3 class="dt-section-title">${esc(t('loans.title'))}<span class="dt-count">${person.loanCount}</span></h3>
+      </div>
+      ${person.loans.length === 0
+        ? `<div class="dt-empty">
+            <div class="dt-empty-title">${esc(t('person.emptyLoans'))}</div>
+            <button type="button" class="dt-btn dt-btn-primary" data-act="add-loan" data-person="${esc(person.id)}">${esc(t('action.addLoan'))}</button>
+          </div>`
+        : `<div class="dt-list">${person.loans.map(loanCard).join('')}</div>`}`
+}
+
+/**
+ * Dashboard view.
+ * @returns the markup.
+ */
+function dashboardView() {
+  const { dashboard, baseCurrency } = derive()
+  const empty = { lentDue: 0, borrowedDue: 0, interest: 0, net: 0, position: 'settled', overdueCount: 0, overdueAmount: 0 }
+  const base = dashboard.byCurrency[baseCurrency] ?? empty
+  const others = dashboard.currencies.filter((code) => code !== baseCurrency)
+  const netTone = base.position === 'owedToMe' ? 'dt-green' : base.position === 'iOwe' ? 'dt-red' : ''
+  const netLabel = base.position === 'owedToMe' ? t('card.net.positive') : base.position === 'iOwe' ? t('card.net.negative') : t('card.net.settled')
+
+  const rows = dashboard.people.map((person) => {
+    const currency = person.currencies.includes(baseCurrency) ? baseCurrency : person.currencies[0] ?? baseCurrency
+    const bucket = person.byCurrency[currency]
+    const lentDue = bucket?.lentDue ?? 0
+    const borrowedDue = bucket?.borrowedDue ?? 0
+    return {
+      person,
+      currency,
+      lentDue,
+      borrowedDue,
+      totalDue: calc.round2(lentDue + borrowedDue),
+      position: bucket?.position ?? 'settled',
+      net: bucket?.net ?? 0,
+      worstOverdue: person.loans.reduce((days, loan) => (loan.isOverdue ? Math.max(days, loan.overdueDays) : days), 0),
+    }
+  }).sort((left, right) => right.totalDue - left.totalDue || left.person.name.localeCompare(right.person.name))
+
+  const strips = Object.entries(dashboard.byCurrency)
+    .filter(([, bucket]) => bucket.overdueCount > 0)
+    .map(([code, bucket]) => `
+      <div class="dt-banner dt-banner-warn">
+        <span class="dt-banner-grow">${esc(t('overdue.banner', { count: bucket.overdueCount, amount: money(bucket.overdueAmount, code) }))}</span>
+      </div>`).join('')
+
+  const alsoLine = (pick) => others.length === 0 ? '' : `
+              <div class="dt-mini"><span>${esc(t('other.currencies'))}: ${esc(others.map((code) => money(pick(dashboard.byCurrency[code]), code)).join(' \u00b7 '))}</span></div>`
+
+  return `
+      ${dashboard.demo ? `
+      <div class="dt-banner">
+        <span class="dt-banner-grow">${esc(t('demo.banner'))}</span>
+        <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="keep-demo">${esc(t('action.keepDemo'))}</button>
+        <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="clear-all">${esc(t('action.clear'))}</button>
+      </div>` : ''}
+      ${strips}
+      <div class="dt-cards">
+        <div class="dt-card">
+          <div class="dt-card-label">${esc(t('card.receivables'))}</div>
+          <div class="dt-card-value dt-green">${esc(money(base.lentDue, baseCurrency))}</div>
+          ${alsoLine((bucket) => bucket.lentDue)}
+        </div>
+        <div class="dt-card">
+          <div class="dt-card-label">${esc(t('card.payables'))}</div>
+          <div class="dt-card-value dt-red">${esc(money(base.borrowedDue, baseCurrency))}</div>
+          ${alsoLine((bucket) => bucket.borrowedDue)}
+        </div>
+        <div class="dt-card">
+          <div class="dt-card-label">${esc(t('card.net'))}</div>
+          <div class="dt-card-value ${netTone}">${esc(money(base.net, baseCurrency))}</div>
+          <div class="dt-card-hint">${esc(netLabel)}</div>
+        </div>
+        <div class="dt-card">
+          <div class="dt-card-label">${esc(t('card.interest'))}</div>
+          <div class="dt-card-value">${esc(money(base.interest, baseCurrency))}</div>
+          <div class="dt-card-hint">${esc(t('card.interest.hint'))}</div>
+        </div>
+      </div>
+      <div class="dt-section-head">
+        <h3 class="dt-section-title">${esc(t('people.title'))}<span class="dt-count">${rows.length}</span></h3>
+        <div class="dt-actions">
+          <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="load-demo">${esc(t('action.demo'))}</button>
+          <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="settings">${esc(t('action.settings'))}</button>
+          ${rows.length > 0 ? `<button type="button" class="dt-btn dt-btn-sm" data-act="add-loan">${esc(t('action.addLoan'))}</button>` : ''}
+          <button type="button" class="dt-btn dt-btn-sm" data-act="add-person">${esc(t('action.addPerson'))}</button>
+        </div>
+      </div>
+      ${rows.length === 0
+        ? `<div class="dt-empty">
+            <div class="dt-empty-title">${esc(t('people.empty.title'))}</div>
+            <p class="dt-empty-body">${esc(t('people.empty.body'))}</p>
+            <div class="dt-actions" style="justify-content:center">
+              <button type="button" class="dt-btn dt-btn-primary" data-act="add-person">${esc(t('action.addPerson'))}</button>
+              <button type="button" class="dt-btn" data-act="load-demo">${esc(t('action.demo'))}</button>
+            </div>
+          </div>`
+        : `<div class="dt-list">${rows.map((row) => {
+          const positionText = row.position === 'owedToMe' ? t('people.owedToMe') : row.position === 'iOwe' ? t('people.iOwe') : t('people.settled')
+          const tone = row.position === 'owedToMe' ? 'dt-green' : row.position === 'iOwe' ? 'dt-red' : ''
+          const showNet = row.lentDue > 0.005 && row.borrowedDue > 0.005
+          return `
+            <button type="button" class="dt-row ${row.position === 'owedToMe' ? 'dt-row-owed' : row.position === 'iOwe' ? 'dt-row-owe' : ''}"
+              data-act="open-person" data-person="${esc(row.person.id)}"
+              aria-label="${esc(`${t('people.open', { name: row.person.name })} — ${money(row.totalDue, row.currency)}, ${positionText}`)}">
+              <span class="dt-avatar" aria-hidden="true">${esc(initials(row.person.name))}</span>
+              <span class="dt-row-main">
+                <span class="dt-row-name">${esc(row.person.name)}${row.worstOverdue > 0 ? `<span class="dt-tag dt-tag-orange">${esc(t('loan.overdueDays', { days: row.worstOverdue }))}</span>` : ''}</span>
+                <span class="dt-row-meta">
+                  <span>${esc(loanCountLabel(row.person.loanCount))}</span>
+                  ${showNet ? `<span>${esc(t('people.net'))}: ${esc(money(row.net, row.currency))}</span>` : ''}
+                  ${row.person.contact ? `<span>${esc(row.person.contact)}</span>` : ''}
+                </span>
+              </span>
+              <span class="dt-row-side">
+                <span class="dt-row-amount">${esc(money(row.totalDue, row.currency))}</span>
+                <span class="dt-row-status ${tone}">${esc(positionText)}</span>
+              </span>
+            </button>`
+        }).join('')}</div>`}`
+}
+
+/* ------------------------------------------------------------------ */
+/* forms                                                               */
+/* ------------------------------------------------------------------ */
+
+/** A labelled text/number/date input. */
+function field(name, label, value, options = {}) {
+  const { type = 'text', step = '0.01', wide = false, min = '0' } = options
+  return `
+        <label class="dt-field${wide ? ' dt-field-wide' : ''}">
+          <span class="dt-label">${esc(label)}</span>
+          <input class="dt-input" name="${name}" type="${type}" value="${esc(value)}"
+            ${type === 'number' ? `min="${min}" step="${step}"` : ''}>
+        </label>`
+}
+
+/** A labelled select. */
+function selectField(name, label, value, choices, wide = false) {
+  return `
+        <label class="dt-field${wide ? ' dt-field-wide' : ''}">
+          <span class="dt-label">${esc(label)}</span>
+          <select class="dt-select" name="${name}">
+            ${choices.map((choice) => `<option value="${esc(choice.value)}"${choice.value === value ? ' selected' : ''}>${esc(choice.label)}</option>`).join('')}
+          </select>
+        </label>`
+}
+
+/** A segmented control; the value travels in a hidden input. */
+function segmentedField(name, label, value, choices) {
+  return `
+        <div class="dt-field dt-field-wide">
+          <span class="dt-label">${esc(label)}</span>
+          <div class="dt-segment" role="group" aria-label="${esc(label)}">
+            ${choices.map((choice) => `
+              <button type="button" class="dt-segment-option" data-seg="${name}" data-value="${esc(choice.value)}"
+                aria-pressed="${choice.value === value}">${esc(choice.label)}</button>`).join('')}
+          </div>
+          <input type="hidden" name="${name}" value="${esc(value)}">
+        </div>`
+}
+
+/**
+ * Build a loan draft from the open form.
+ * @returns the draft.
+ */
+function readLoanForm() {
+  const form = document.getElementById('dt-form')
+  const value = (name) => form.querySelector(`[name="${name}"]`)?.value ?? ''
+  return {
+    id: form.dataset.loanId || null,
+    personId: value('personId'),
+    direction: value('direction'),
+    principal: value('principal'),
+    currency: value('currency'),
+    startDate: value('startDate'),
+    dueDate: value('dueDate'),
+    rateType: value('rateType'),
+    rateValue: value('rateValue'),
+    status: value('status'),
+    note: value('note'),
+    renewFromId: form.dataset.renewFrom || null,
+    payments: JSON.parse(form.dataset.payments || '[]'),
+  }
+}
+
+/**
+ * The loan preview markup.
+ * @param draft - the current form values.
+ * @returns the preview markup.
+ */
+function loanPreview(draft) {
+  const preview = calc.deriveLoan({
+    ...draft,
+    principal: Number(draft.principal) || 0,
+    rateValue: Number(draft.rateValue) || 0,
+  }, { asOf, penalty: runtime.penalty })
+  const currency = String(draft.currency || 'RUB').toUpperCase()
+  return `
+        <div class="dt-preview-head">
+          <span class="dt-preview-title">${esc(t('preview.title'))}</span>
+          <span class="dt-preview-asof">${esc(t('preview.hint', { date: formatDate(asOf) }))}</span>
+        </div>
+        <div class="dt-preview-total">
+          <span class="dt-preview-total-label">${esc(t('loan.totalDue'))}</span>
+          <span class="dt-preview-total-value ${preview.isOverdue ? 'dt-orange' : ''}">${esc(money(preview.totalDue, currency))}</span>
+        </div>
+        <div class="dt-mini">
+          <span>${esc(t('loan.principal'))}: ${esc(money(preview.principal, currency))}</span>
+          <span>${esc(t('loan.accrued'))}: ${esc(money(preview.accruedInterest, currency))}</span>
+          <span>${esc(t('loan.days', { days: preview.daysElapsed }))}</span>
+          ${preview.overdueDays > 0 ? `<span class="dt-orange">${esc(t('loan.overdueDays', { days: preview.overdueDays }))}</span>` : ''}
+          ${preview.penaltyInterest > 0 ? `<span>${esc(t('loan.penalty'))}: ${esc(money(preview.penaltyInterest, currency))}</span>` : ''}
+        </div>`
+}
+
+/**
+ * The payment preview markup.
+ * @param loan - the stored loan.
+ * @param derived - its derived form.
+ * @param payment - the payment being added.
+ * @returns the preview markup.
+ */
+function paymentPreview(loan, derived, payment) {
+  const preview = calc.deriveLoan({
+    ...loan,
+    payments: [...(loan.payments ?? []), payment],
+  }, { asOf, penalty: runtime.penalty })
+  return `
+        <div class="dt-preview-head">
+          <span class="dt-preview-title">${esc(t('preview.afterPayment'))}</span>
+          <span class="dt-preview-asof">${esc(t('preview.hint', { date: formatDate(asOf) }))}</span>
+        </div>
+        <div class="dt-preview-total">
+          <span class="dt-preview-total-label">${esc(t('loan.totalDue'))}</span>
+          <span class="dt-preview-total-value">${esc(money(preview.totalDue, derived.currency))}</span>
+        </div>
+        <div class="dt-mini">
+          <span>${esc(t('loan.remainingPrincipal'))}: ${esc(money(preview.remainingPrincipal, derived.currency))}</span>
+          <span>${esc(t('loan.accrued'))}: ${esc(money(preview.remainingInterest, derived.currency))}</span>
+          ${preview.overpaid > 0 ? `<span class="dt-green">+${esc(money(preview.overpaid, derived.currency))}</span>` : ''}
+        </div>`
+}
+
+/** Wrap modal content in the overlay and dialog. */
+function modalShell(title, body, saveLabel, formAttributes = '') {
+  return `
+      <div class="dt-overlay" data-act="overlay">
+        <div class="dt-modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+          <div class="dt-modal-head">
+            <h2 class="dt-modal-title">${esc(title)}</h2>
+            <button type="button" class="dt-btn dt-btn-ghost" data-act="close-modal" aria-label="${esc(t('action.close'))}" title="${esc(t('action.close'))}">&times;</button>
+          </div>
+          <form id="dt-form" class="dt-modal-body"${formAttributes} novalidate>
+            <div id="dt-errors"></div>
+            ${body}
+            <div id="dt-preview" class="dt-preview"></div>
+          </form>
+          <div class="dt-modal-foot">
+            <button type="button" class="dt-btn" data-act="close-modal">${esc(t('action.cancel'))}</button>
+            <button type="button" class="dt-btn dt-btn-primary" data-act="save">${esc(saveLabel)}</button>
+          </div>
+        </div>
+      </div>`
+}
+
+/**
+ * The person form modal.
+ * @param person - the record being edited, or null.
+ * @returns the markup.
+ */
+function personModal(person) {
+  const draft = person ?? { id: null, name: '', contact: '', note: '' }
+  const body = `
+        <div class="dt-fields">
+          ${field('name', t('field.name'), draft.name ?? '', { wide: true })}
+          ${field('contact', t('field.contact'), draft.contact ?? '', { wide: true })}
+          ${field('note', t('field.note'), draft.note ?? '', { wide: true })}
+        </div>`
+  return modalShell(draft.id === null ? t('form.newPerson') : t('form.editPerson'), body, t('action.save'))
+}
+
+/**
+ * The loan form modal, with its live preview.
+ * @param personId - the owner.
+ * @param loan - the stored loan being edited, or null.
+ * @returns the markup.
+ */
+function loanModal(personId, loan, renewFrom = null) {
+  const defaultCurrency = (() => {
+    const owner = derive().dashboard.people.find((item) => item.id === personId)
+    const base = derive().baseCurrency
+    if (owner === undefined || owner.currencies.length === 0) return base
+    return owner.currencies.includes(base) ? base : owner.currencies[0]
+  })()
+  const draft = renewFrom !== null && renewFrom !== undefined
+    ? {
+      id: null, personId, direction: renewFrom.direction,
+      // The whole outstanding balance becomes the new principal, so renewing
+      // never writes money off; only the interest terms change.
+      principal: String(renewFrom.totalDue),
+      currency: renewFrom.currency, startDate: asOf, dueDate: '',
+      rateType: renewFrom.rateType === 'none' ? 'annual' : renewFrom.rateType,
+      rateValue: renewFrom.rateType === 'none' ? '' : String(renewFrom.rateValue),
+      status: 'active', note: '', payments: [],
+    }
+    : loan === null
+      ? {
+        id: null, personId, direction: 'lent', principal: '', currency: defaultCurrency, startDate: asOf,
+        dueDate: '', rateType: 'annual', rateValue: '', status: 'active', note: '', payments: [],
+      }
+      : {
+        ...loan,
+        status: loan.status === 'partially_paid' ? 'active' : loan.status,
+        principal: String(loan.principal),
+        rateValue: String(loan.rateValue),
+        dueDate: loan.dueDate ?? '',
+      }
+  const rateType = draft.rateType
+  const body = `
+        ${renewFrom ? `<div class="dt-banner" style="margin-bottom:13px"><span class="dt-banner-grow">${esc(t('renew.hint', { date: formatDate(renewFrom.startDate) }))}</span></div>` : ''}
+        <input type="hidden" name="personId" value="${esc(draft.personId)}">
+        <div class="dt-fields">
+          ${segmentedField('direction', t('field.direction'), draft.direction, [
+            { value: 'lent', label: t('loan.lent') },
+            { value: 'borrowed', label: t('loan.borrowed') },
+          ])}
+          ${field('principal', t('field.principal'), draft.principal, { type: 'number' })}
+          ${selectField('currency', t('field.currency'), String(draft.currency).toUpperCase(), CURRENCIES.map((code) => ({ value: code, label: code })))}
+          ${field('startDate', t('field.startDate'), draft.startDate, { type: 'date' })}
+          ${field('dueDate', t('field.dueDate'), draft.dueDate ?? '', { type: 'date' })}
+          ${selectField('rateType', t('field.rateType'), rateType, [
+            { value: 'annual', label: t('rateType.annual') },
+            { value: 'monthly', label: t('rateType.monthly') },
+            { value: 'daily', label: t('rateType.daily') },
+            { value: 'fixed', label: t('rateType.fixed') },
+            { value: 'none', label: t('rateType.none') },
+          ])}
+          <label class="dt-field" id="dt-rate-field"${rateType === 'none' ? ' hidden' : ''}>
+            <span class="dt-label" id="dt-rate-label">${esc(rateType === 'fixed' ? t('rateValue.amount') : t('field.rateValue'))}</span>
+            <input class="dt-input" name="rateValue" type="number" min="0" step="0.01" value="${esc(draft.rateValue)}">
+          </label>
+          ${selectField('status', t('field.status'), draft.status, [
+            { value: 'active', label: t('loan.status.active') },
+            { value: 'closed', label: t('loan.status.closed') },
+          ], true)}
+          ${field('note', t('field.note'), draft.note ?? '', { wide: true })}
+        </div>`
+  return modalShell(
+    renewFrom ? t('form.renewLoan') : loan === null ? t('form.newLoan') : t('form.editLoan'),
+    body,
+    t('action.save'),
+    ` data-loan-id="${esc(draft.id ?? '')}" data-payments="${esc(JSON.stringify(draft.payments ?? []))}"`
+      + (renewFrom ? ` data-renew-from="${esc(renewFrom.id)}"` : ''),
+  )
+}
+
+/**
+ * The payment form modal.
+ * @param personId - the owner.
+ * @param loan - the derived loan.
+ * @param stored - the stored loan.
+ * @returns the markup.
+ */
+function paymentModal(loan, stored) {
+  const body = `
+        <div class="dt-fields">
+          ${field('amount', t('field.amount'), '', { type: 'number' })}
+          ${field('date', t('field.paymentDate'), asOf, { type: 'date' })}
+          ${segmentedField('allocation', t('field.allocation'), 'interest_first', [
+            { value: 'interest_first', label: t('allocation.interest_first') },
+            { value: 'principal_first', label: t('allocation.principal_first') },
+          ])}
+        </div>`
+  return modalShell(
+    t('form.payment'),
+    body,
+    t('action.save'),
+    ` data-loan-id="${esc(stored.id)}"`,
+  )
+}
+
+/** The settings modal. */
+function settingsModal() {
+  const penalty = runtime.penalty ?? { enabled: false, annualRate: 24 }
+  const body = `
+        <div class="dt-fields">
+          <label class="dt-field dt-field-wide dt-check">
+            <input type="checkbox" name="penaltyEnabled"${penalty.enabled ? ' checked' : ''}>
+            <span>${esc(t('settings.penalty'))}</span>
+          </label>
+          ${field('penaltyRate', t('settings.penaltyRate'), String(penalty.annualRate ?? 24), { type: 'number', step: '0.5', wide: true })}
+        </div>
+        <div class="dt-danger-row">
+          <span class="dt-label">${esc(t('action.clear'))}</span>
+          <button type="button" class="dt-btn dt-btn-danger" data-act="clear-all">${esc(t('action.clear'))}</button>
+        </div>`
+  return modalShell(t('action.settings'), body, t('action.save'))
+}
+
+/* ------------------------------------------------------------------ */
+/* render                                                              */
+/* ------------------------------------------------------------------ */
+
+/** Paint the whole page. */
+function render() {
+  const { dashboard, baseCurrency } = derive()
+  const person = view.kind === 'person' ? dashboard.people.find((item) => item.id === view.id) : null
+  if (view.kind === 'person' && person === null) view = { kind: 'dashboard', id: null }
+
+  const content = person === null ? dashboardView() : personView(person, baseCurrency)
+
+  let overlay = ''
+  if (modal !== null) {
+    if (modal.kind === 'person') {
+      const record = modal.id === null ? null : runtime.persons.find((item) => item.id === modal.id) ?? null
+      overlay = personModal(record)
+    } else if (modal.kind === 'loan') {
+      const stored = modal.loanId === undefined || modal.loanId === null
+        ? null
+        : runtime.persons.find((item) => item.id === modal.personId)?.loans?.find((item) => item.id === modal.loanId) ?? null
+      overlay = loanModal(modal.personId, stored)
+    } else if (modal.kind === 'renew') {
+      const previous = dashboard.people.find((item) => item.id === modal.personId)?.loans.find((item) => item.id === modal.loanId)
+      overlay = previous ? loanModal(modal.personId, null, previous) : ''
+    } else if (modal.kind === 'payment') {
+      const stored = runtime.persons.find((item) => item.id === modal.personId)?.loans?.find((item) => item.id === modal.loanId)
+      const derived = dashboard.people.find((item) => item.id === modal.personId)?.loans.find((item) => item.id === modal.loanId)
+      overlay = derived && stored ? paymentModal(derived, stored) : ''
+    } else if (modal.kind === 'settings') {
+      overlay = settingsModal()
+    }
+  }
+
+  app.innerHTML = `
+    <div class="dt-root">
+      <header class="dt-header">
+        <div class="dt-header-main">
+          <h1 class="dt-title">${esc(t('app.title'))}</h1>
+          <p class="dt-sub">${esc(t('app.subtitle'))} &middot; ${esc(t('app.asOf', { date: formatDate(asOf) }))}</p>
+        </div>
+        <div class="dt-actions">
+          <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="toggle-lang" title="Русский / English">${lang === 'ru' ? 'EN' : 'RU'}</button>
+          <button type="button" class="dt-btn dt-btn-ghost dt-btn-sm" data-act="settings">${esc(t('action.settings'))}</button>
+        </div>
+      </header>
+      <div class="dt-scroll">${content}</div>
+      ${overlay}
+    </div>`
+
+  if (modal !== null && (modal.kind === 'loan' || modal.kind === 'renew')) patchLoanPreview()
+  if (modal !== null && modal.kind === 'payment') patchPaymentPreview()
+  if (modal !== null) {
+    const first = app.querySelector('.dt-modal-body input:not([type="hidden"]), .dt-modal-body select')
+    if (first) first.focus()
+  }
+  document.documentElement.lang = lang
+}
+
+/** Refresh only the loan preview, so typing keeps the caret. */
+function patchLoanPreview() {
+  const target = document.getElementById('dt-preview')
+  const form = document.getElementById('dt-form')
+  if (!target || !form) return
+  // The rate input disappears for `none`; re-render the fields only when the
+  // rate type changed, which is a click rather than typing.
+  target.innerHTML = loanPreview(readLoanForm())
+}
+
+/** Refresh only the payment preview. */
+function patchPaymentPreview() {
+  const target = document.getElementById('dt-preview')
+  const form = document.getElementById('dt-form')
+  if (!target || !form) return
+  if (modal.kind !== 'payment') return
+  const stored = runtime.persons.find((item) => item.id === modal.personId)?.loans?.find((item) => item.id === modal.loanId)
+  const derived = derive().dashboard.people.find((item) => item.id === modal.personId)?.loans.find((item) => item.id === modal.loanId)
+  if (!stored || !derived) return
+  const value = (name) => form.querySelector(`[name="${name}"]`)?.value ?? ''
+  target.innerHTML = paymentPreview(stored, derived, {
+    date: value('date'),
+    amount: calc.round2(Number(value('amount')) || 0),
+    allocation: value('allocation'),
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* actions                                                             */
+/* ------------------------------------------------------------------ */
+
+/** Show validation messages above the form fields. */
+function showErrors(messages) {
+  const box = document.getElementById('dt-errors')
+  if (!box) return
+  box.innerHTML = messages.length === 0 ? '' : `
+        <div class="dt-banner dt-banner-warn" style="margin-bottom:12px">
+          <span class="dt-banner-grow">${esc(messages.join(' \u00b7 '))}</span>
+        </div>`
+}
+
+/** Save the open modal. */
+function saveModal() {
+  const form = document.getElementById('dt-form')
+  if (!form) return
+
+  if (modal.kind === 'person') {
+    const value = (name) => form.querySelector(`[name="${name}"]`)?.value ?? ''
+    const draft = { id: modal.id ?? null, name: value('name').trim(), contact: value('contact').trim(), note: value('note').trim() }
+    const validation = calc.validatePerson(draft)
+    const clash = runtime.persons.some((item) => item.id !== draft.id && item.name.trim().toLowerCase() === draft.name.toLowerCase())
+    const messages = Object.values(validation.errors).map((key) => t(key))
+    if (!validation.ok || (clash && draft.name !== '')) {
+      if (clash && draft.name !== '') messages.push(t('error.personExists'))
+      showErrors(messages)
+      return
+    }
+    if (draft.id === null) {
+      const id = newId('person')
+      runtime.persons.push({ id, name: draft.name, contact: draft.contact, note: draft.note, loans: [] })
+      view = { kind: 'person', id }
+    } else {
+      const target = runtime.persons.find((item) => item.id === draft.id)
+      if (target) Object.assign(target, { name: draft.name, contact: draft.contact, note: draft.note })
+    }
+    modal = null
+    commit()
+    return
+  }
+
+  if (modal.kind === 'loan') {
+    const draft = readLoanForm()
+    const validation = calc.validateLoan(draft, { persons: runtime.persons })
+    if (!validation.ok) {
+      showErrors(Object.values(validation.errors).map((key) => t(key)))
+      return
+    }
+    const record = {
+      id: draft.id ?? newId('loan'),
+      personId: draft.personId,
+      direction: draft.direction,
+      principal: calc.round2(Number(draft.principal)),
+      currency: String(draft.currency).toUpperCase(),
+      startDate: draft.startDate,
+      dueDate: draft.dueDate === '' ? null : draft.dueDate,
+      rateType: draft.rateType,
+      rateValue: draft.rateType === 'none' ? 0 : Number(draft.rateValue) || 0,
+      status: draft.status,
+      note: draft.note,
+      payments: draft.payments ?? [],
+    }
+    // Moving a loan between people moves it; it must not be copied.
+    for (const candidate of runtime.persons) {
+      if (candidate.id !== record.personId) candidate.loans = (candidate.loans ?? []).filter((item) => item.id !== record.id)
+    }
+    const owner = runtime.persons.find((item) => item.id === record.personId)
+    if (!owner) return
+    owner.loans = owner.loans ?? []
+    const index = owner.loans.findIndex((item) => item.id === record.id)
+    if (index === -1) owner.loans.push(record)
+    else owner.loans[index] = record
+    modal = null
+    commit()
+    return
+  }
+
+  if (modal.kind === 'renew') {
+    const draft = readLoanForm()
+    const validation = calc.validateLoan(draft, { persons: runtime.persons })
+    if (!validation.ok) {
+      showErrors(Object.values(validation.errors).map((key) => t(key)))
+      return
+    }
+    const owner = runtime.persons.find((item) => item.id === draft.personId)
+    const previous = owner?.loans?.find((item) => item.id === draft.renewFromId)
+    if (!owner || !previous) return
+    // Settle the old loan in full today, then carry its balance into the new one.
+    const plan = calc.planRenewal(previous, { asOf, penalty: runtime.penalty })
+    if (plan.settlementPayment !== null) {
+      previous.payments = [...(previous.payments ?? []), plan.settlementPayment]
+    }
+    previous.status = 'closed'
+    owner.loans.push({
+      id: newId('loan'),
+      personId: owner.id,
+      direction: draft.direction,
+      principal: calc.round2(Number(draft.principal)),
+      currency: String(draft.currency).toUpperCase(),
+      startDate: draft.startDate,
+      dueDate: draft.dueDate === '' ? null : draft.dueDate,
+      rateType: draft.rateType,
+      rateValue: draft.rateType === 'none' ? 0 : Number(draft.rateValue) || 0,
+      status: 'active',
+      note: draft.note,
+      payments: [],
+    })
+    modal = null
+    commit()
+    return
+  }
+
+  if (modal.kind === 'payment') {
+    const value = (name) => form.querySelector(`[name="${name}"]`)?.value ?? ''
+    const payment = {
+      date: value('date'),
+      amount: calc.round2(Number(value('amount')) || 0),
+      allocation: value('allocation'),
+    }
+    const validation = calc.validatePayment(payment)
+    if (!validation.ok) {
+      showErrors(Object.values(validation.errors).map((key) => t(key)))
+      return
+    }
+    const target = runtime.persons.find((item) => item.id === modal.personId)?.loans?.find((item) => item.id === modal.loanId)
+    if (target) {
+      target.payments = [...(target.payments ?? []), payment]
+      // A payment that clears the loan closes it, so it cannot reopen as the
+      // next day's interest accrues.
+      const settled = calc.deriveLoan(target, { asOf: payment.date, penalty: runtime.penalty })
+      target.status = settled.totalDue <= 0 ? 'closed' : 'active'
+    }
+    modal = null
+    commit()
+    return
+  }
+
+  if (modal.kind === 'settings') {
+    runtime.penalty = {
+      enabled: form.querySelector('[name="penaltyEnabled"]').checked,
+      annualRate: Math.max(0, Number(form.querySelector('[name="penaltyRate"]').value) || 0),
+    }
+    modal = null
+    commit()
+  }
+}
+
+/**
+ * Handle a click on the delegated `data-act` surface.
+ * @param event - the click event.
+ */
+function onClick(event) {
+  const target = event.target.closest('[data-act]')
+  if (target === null) return
+  const act = target.dataset.act
+  const personId = target.dataset.person
+  const loanId = target.dataset.loan
+
+  if (act === 'toggle-lang') {
+    lang = lang === 'ru' ? 'en' : 'ru'
+    render()
+    return
+  }
+  if (act === 'open-person') {
+    view = { kind: 'person', id: personId }
+    render()
+    return
+  }
+  if (act === 'back') {
+    view = { kind: 'dashboard', id: null }
+    render()
+    return
+  }
+  if (act === 'add-person') { modal = { kind: 'person', id: null }; render(); return }
+  if (act === 'edit-person') { modal = { kind: 'person', id: personId }; render(); return }
+  if (act === 'add-loan') { modal = { kind: 'loan', personId: personId ?? runtime.persons[0]?.id, loanId: null }; render(); return }
+  if (act === 'edit-loan') { modal = { kind: 'loan', personId, loanId }; render(); return }
+  if (act === 'renew-loan') { modal = { kind: 'renew', personId, loanId }; render(); return }
+  if (act === 'add-payment') { modal = { kind: 'payment', personId, loanId }; render(); return }
+  if (act === 'settings') { modal = { kind: 'settings' }; render(); return }
+  if (act === 'close-modal' || (act === 'overlay' && event.target === target)) {
+    modal = null
+    render()
+    return
+  }
+  if (act === 'save') { saveModal(); return }
+  if (act === 'delete-person') {
+    const person = runtime.persons.find((item) => item.id === personId)
+    if (!window.confirm(t('confirm.deletePerson', { name: person?.name ?? '' }))) return
+    runtime.persons = runtime.persons.filter((item) => item.id !== personId)
+    view = { kind: 'dashboard', id: null }
+    commit()
+    return
+  }
+  if (act === 'delete-loan') {
+    if (!window.confirm(t('confirm.deleteLoan'))) return
+    const owner = runtime.persons.find((item) => item.id === personId)
+    if (owner) owner.loans = (owner.loans ?? []).filter((item) => item.id !== loanId)
+    commit()
+    return
+  }
+  if (act === 'delete-payment') {
+    if (!window.confirm(t('confirm.deletePayment'))) return
+    const owner = runtime.persons.find((item) => item.id === personId)
+    const loan = owner?.loans?.find((item) => item.id === loanId)
+    const index = Number(target.dataset.index)
+    if (loan && Number.isInteger(index) && index >= 0 && index < (loan.payments ?? []).length) {
+      loan.payments.splice(index, 1)
+      commit()
+    }
+    return
+  }
+  if (act === 'toggle-loan') {
+    const derived = derive().dashboard.people.find((item) => item.id === personId)?.loans.find((item) => item.id === loanId)
+    const targetLoan = runtime.persons.find((item) => item.id === personId)?.loans?.find((item) => item.id === loanId)
+    if (derived && targetLoan) {
+      targetLoan.status = derived.isSettledByStored ? 'active' : 'closed'
+      commit()
+    }
+    return
+  }
+  if (act === 'load-demo') {
+    if (runtime.persons.length > 0 && !window.confirm(t('confirm.loadDemo'))) return
+    runtime = { ...calc.createSeed(asOf), demo: true }
+    view = { kind: 'dashboard', id: null }
+    commit()
+    return
+  }
+  if (act === 'keep-demo') { runtime.demo = false; commit(); return }
+  if (act === 'clear-all') {
+    if (!window.confirm(t('confirm.clear'))) return
+    runtime.persons = []
+    runtime.demo = false
+    modal = null
+    view = { kind: 'dashboard', id: null }
+    commit()
+  }
+}
+
+/**
+ * Show or hide the rate field and relabel it for the chosen rate type, without
+ * repainting the form (a repaint would discard what the user has typed).
+ * @param rateType - the newly selected rate type.
+ */
+function syncRateField(rateType) {
+  const fieldElement = document.getElementById('dt-rate-field')
+  const labelElement = document.getElementById('dt-rate-label')
+  if (fieldElement) fieldElement.hidden = rateType === 'none'
+  if (labelElement) labelElement.textContent = rateType === 'fixed' ? t('rateValue.amount') : t('field.rateValue')
+}
+
+/**
+ * Handle a click on a segmented option.
+ * @param event - the click event.
+ */
+function onFormClick(event) {
+  const segment = event.target.closest('[data-seg]')
+  if (segment === null) return
+  const name = segment.dataset.seg
+  const form = document.getElementById('dt-form')
+  const input = form?.querySelector(`[name="${name}"]`)
+  if (input) input.value = segment.dataset.value
+  for (const option of segment.parentElement.querySelectorAll('[data-seg]')) {
+    option.setAttribute('aria-pressed', String(option === segment))
+  }
+  if (name === 'rateType') syncRateField(segment.dataset.value)
+  if (modal?.kind === 'loan') patchLoanPreview()
+  if (modal?.kind === 'payment') patchPaymentPreview()
+}
+
+/** Wire the page once; everything else is delegated. */
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && modal !== null) {
+    modal = null
+    render()
+  }
+})
+app.addEventListener('click', (event) => { onFormClick(event); onClick(event) })
+app.addEventListener('input', () => {
+  if (modal === null) return
+  if (modal.kind === 'loan' || modal.kind === 'renew') patchLoanPreview()
+  if (modal.kind === 'payment') patchPaymentPreview()
+})
+app.addEventListener('change', () => {
+  if (modal === null) return
+  if (modal.kind === 'loan' || modal.kind === 'renew') patchLoanPreview()
+  if (modal.kind === 'payment') patchPaymentPreview()
+})
+
+saveState()
+render()
+
+// Installability: register the offline worker wherever the platform allows it.
+// Without it the app still runs; the worker only makes it launch offline and
+// keeps the phone from showing a blank page on a cold start with no network.
+if (typeof navigator !== 'undefined'
+  && 'serviceWorker' in navigator
+  && typeof location !== 'undefined'
+  && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {
+      // An unsupported or blocked worker is not an error the user can act on.
+    })
+  })
+}
+})()
+</script>
+</body>
+</html>
